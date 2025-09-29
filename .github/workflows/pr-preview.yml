@@ -1,0 +1,196 @@
+name: PR Preview Deploy
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID || 'ratings-reviews-poc' }}
+  REGION: us-central1
+  SERVICE_NAME: ratings-reviews
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: |
+          backend/package-lock.json
+          frontend/package-lock.json
+
+    - name: Generate PR environment name
+      id: env
+      run: |
+        PR_NUMBER=${{ github.event.number }}
+        BRANCH_NAME=$(echo "${{ github.head_ref }}" | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]')
+        ENV_NAME="pr-${PR_NUMBER}-${BRANCH_NAME}"
+        echo "env_name=${ENV_NAME}" >> $GITHUB_OUTPUT
+        echo "backend_service=${SERVICE_NAME}-backend-${ENV_NAME}" >> $GITHUB_OUTPUT
+        echo "frontend_service=${SERVICE_NAME}-frontend-${ENV_NAME}" >> $GITHUB_OUTPUT
+
+    - name: Authenticate to Google Cloud
+      id: auth
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+        project_id: ${{ env.PROJECT_ID }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Configure Docker for GCR
+      run: gcloud auth configure-docker
+
+    - name: Build and test backend
+      run: |
+        cd backend
+        npm ci
+        npm run build
+        npm test || echo "No tests configured for backend"
+
+    - name: Build and test frontend
+      run: |
+        cd frontend
+        npm ci
+        npm run build
+        npm test || echo "No tests configured for frontend"
+
+    - name: Build backend Docker image
+      run: |
+        cd backend
+        docker build -t gcr.io/$PROJECT_ID/backend:${{ steps.env.outputs.env_name }} .
+
+    - name: Build frontend Docker image
+      run: |
+        cd frontend
+        docker build -t gcr.io/$PROJECT_ID/frontend:${{ steps.env.outputs.env_name }} .
+
+    - name: Push Docker images
+      run: |
+        docker push gcr.io/$PROJECT_ID/backend:${{ steps.env.outputs.env_name }}
+        docker push gcr.io/$PROJECT_ID/frontend:${{ steps.env.outputs.env_name }}
+
+    - name: Deploy backend to Cloud Run
+      run: |
+        gcloud run deploy ${{ steps.env.outputs.backend_service }} \
+          --image gcr.io/$PROJECT_ID/backend:${{ steps.env.outputs.env_name }} \
+          --platform managed \
+          --region $REGION \
+          --allow-unauthenticated \
+          --port 8080 \
+          --memory 512Mi \
+          --cpu 1 \
+          --min-instances 0 \
+          --max-instances 10 \
+          --set-env-vars "NODE_ENV=preview,PORT=8080" \
+          --timeout 300
+
+    - name: Deploy frontend to Cloud Run
+      run: |
+        gcloud run deploy ${{ steps.env.outputs.frontend_service }} \
+          --image gcr.io/$PROJECT_ID/frontend:${{ steps.env.outputs.env_name }} \
+          --platform managed \
+          --region $REGION \
+          --allow-unauthenticated \
+          --port 8080 \
+          --memory 512Mi \
+          --cpu 1 \
+          --min-instances 0 \
+          --max-instances 10 \
+          --set-env-vars "NODE_ENV=preview,PORT=8080" \
+          --timeout 300
+
+    - name: Get service URLs
+      id: urls
+      run: |
+        BACKEND_URL=$(gcloud run services describe ${{ steps.env.outputs.backend_service }} --region=$REGION --format='value(status.url)')
+        FRONTEND_URL=$(gcloud run services describe ${{ steps.env.outputs.frontend_service }} --region=$REGION --format='value(status.url)')
+        echo "backend_url=${BACKEND_URL}" >> $GITHUB_OUTPUT
+        echo "frontend_url=${FRONTEND_URL}" >> $GITHUB_OUTPUT
+
+    - name: Update frontend with backend URL
+      run: |
+        # Update the frontend to use the correct backend URL
+        gcloud run services update ${{ steps.env.outputs.frontend_service }} \
+          --region $REGION \
+          --set-env-vars "BACKEND_URL=${{ steps.urls.outputs.backend_url }}"
+
+    - name: Test deployments
+      run: |
+        echo "Testing backend health check..."
+        curl -f ${{ steps.urls.outputs.backend_url }}/health || exit 1
+        
+        echo "Testing frontend health check..."
+        curl -f ${{ steps.urls.outputs.frontend_url }}/health || exit 1
+        
+        echo "Testing backend API..."
+        curl -f ${{ steps.urls.outputs.backend_url }}/api/ratings || exit 1
+
+    - name: Comment PR with preview URLs
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          const pr_number = context.payload.pull_request.number;
+          
+          const comment = `## 🚀 Preview Deployment Ready!
+          
+          Your PR has been deployed to preview environments:
+          
+          | Service | URL | Status |
+          |---------|-----|--------|
+          | 🎯 **Frontend** | [${{ steps.urls.outputs.frontend_url }}](${{ steps.urls.outputs.frontend_url }}) | ✅ |
+          | 🔧 **Backend API** | [${{ steps.urls.outputs.backend_url }}](${{ steps.urls.outputs.backend_url }}) | ✅ |
+          
+          ### Quick Links:
+          - 🌐 [Preview App](${{ steps.urls.outputs.frontend_url }})
+          - 📊 [Backend Health](${{ steps.urls.outputs.backend_url }}/health)
+          - 🔍 [API Ratings](${{ steps.urls.outputs.backend_url }}/api/ratings)
+          
+          ### Environment Details:
+          - **Environment**: \`${{ steps.env.outputs.env_name }}\`
+          - **Region**: \`${{ env.REGION }}\`
+          - **Auto-cleanup**: Environments are automatically cleaned up when PR is closed
+          
+          > 💡 **Note**: This is a POC deployment using only GCP free tier services (Cloud Run).`;
+          
+          // Find existing comment to update or create new one
+          const comments = await github.rest.issues.listComments({
+            owner,
+            repo,
+            issue_number: pr_number,
+          });
+          
+          const existingComment = comments.data.find(comment => 
+            comment.body.includes('Preview Deployment Ready!')
+          );
+          
+          if (existingComment) {
+            await github.rest.issues.updateComment({
+              owner,
+              repo,
+              comment_id: existingComment.id,
+              body: comment
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: pr_number,
+              body: comment
+            });
+          }

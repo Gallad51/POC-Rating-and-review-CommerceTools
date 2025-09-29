@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ratings & Reviews - POC</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .rating-form {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #f9f9f9;
+        }
+        .rating-list {
+            margin: 20px 0;
+        }
+        .rating-item {
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            background: white;
+        }
+        .stars {
+            color: #ffc107;
+            font-size: 1.2em;
+        }
+        input, textarea, button {
+            margin: 5px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌟 Ratings & Reviews POC</h1>
+        
+        <div id="status"></div>
+        
+        <div class="rating-form">
+            <h3>Add a Review</h3>
+            <form id="reviewForm">
+                <div>
+                    <input type="text" id="productId" placeholder="Product ID" required>
+                </div>
+                <div>
+                    <select id="rating" required>
+                        <option value="">Select Rating</option>
+                        <option value="1">⭐ 1 Star</option>
+                        <option value="2">⭐⭐ 2 Stars</option>
+                        <option value="3">⭐⭐⭐ 3 Stars</option>
+                        <option value="4">⭐⭐⭐⭐ 4 Stars</option>
+                        <option value="5">⭐⭐⭐⭐⭐ 5 Stars</option>
+                    </select>
+                </div>
+                <div>
+                    <textarea id="comment" placeholder="Write your review..." rows="3"></textarea>
+                </div>
+                <div>
+                    <input type="text" id="userId" placeholder="User ID" required>
+                </div>
+                <button type="submit">Submit Review</button>
+            </form>
+        </div>
+        
+        <div class="rating-list">
+            <h3>Reviews</h3>
+            <button onclick="loadReviews()">Load Reviews</button>
+            <div id="reviews"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.hostname === 'localhost' 
+            ? 'http://localhost:8080' 
+            : 'https://YOUR_BACKEND_URL';
+        
+        function showStatus(message, isError = false) {
+            const status = document.getElementById('status');
+            status.innerHTML = `<div class="status ${isError ? 'error' : 'success'}">${message}</div>`;
+            setTimeout(() => status.innerHTML = '', 5000);
+        }
+
+        function renderStars(rating) {
+            return '⭐'.repeat(Math.floor(rating));
+        }
+
+        async function loadReviews() {
+            try {
+                const response = await fetch(`${API_BASE}/api/ratings`);
+                const data = await response.json();
+                
+                const reviewsHtml = data.ratings.map(review => `
+                    <div class="rating-item">
+                        <div><strong>Product:</strong> ${review.productId}</div>
+                        <div class="stars">${renderStars(review.rating)} (${review.rating})</div>
+                        <div><strong>Comment:</strong> ${review.comment}</div>
+                        <div><small>By: ${review.userId}</small></div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('reviews').innerHTML = reviewsHtml;
+                showStatus(`Loaded ${data.total} reviews. Average rating: ${data.averageRating}`);
+            } catch (error) {
+                showStatus(`Error loading reviews: ${error.message}`, true);
+            }
+        }
+
+        document.getElementById('reviewForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                productId: document.getElementById('productId').value,
+                rating: parseFloat(document.getElementById('rating').value),
+                comment: document.getElementById('comment').value,
+                userId: document.getElementById('userId').value
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/ratings`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    showStatus('Review submitted successfully!');
+                    document.getElementById('reviewForm').reset();
+                    loadReviews();
+                } else {
+                    const error = await response.json();
+                    showStatus(`Error: ${error.error}`, true);
+                }
+            } catch (error) {
+                showStatus(`Error submitting review: ${error.message}`, true);
+            }
+        });
+
+        // Load reviews on page load
+        loadReviews();
+    </script>
+</body>
+</html>

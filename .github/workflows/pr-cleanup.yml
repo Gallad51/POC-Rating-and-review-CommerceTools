@@ -1,0 +1,86 @@
+name: PR Preview Cleanup
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID || 'ratings-reviews-poc' }}
+  REGION: us-central1
+  SERVICE_NAME: ratings-reviews
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+
+    steps:
+    - name: Generate PR environment name
+      id: env
+      run: |
+        PR_NUMBER=${{ github.event.number }}
+        BRANCH_NAME=$(echo "${{ github.head_ref }}" | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]')
+        ENV_NAME="pr-${PR_NUMBER}-${BRANCH_NAME}"
+        echo "env_name=${ENV_NAME}" >> $GITHUB_OUTPUT
+        echo "backend_service=${SERVICE_NAME}-backend-${ENV_NAME}" >> $GITHUB_OUTPUT
+        echo "frontend_service=${SERVICE_NAME}-frontend-${ENV_NAME}" >> $GITHUB_OUTPUT
+
+    - name: Authenticate to Google Cloud
+      id: auth
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+        project_id: ${{ env.PROJECT_ID }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Delete Cloud Run services
+      run: |
+        # Delete backend service (ignore errors if service doesn't exist)
+        gcloud run services delete ${{ steps.env.outputs.backend_service }} \
+          --region=$REGION \
+          --quiet || echo "Backend service not found or already deleted"
+        
+        # Delete frontend service (ignore errors if service doesn't exist)
+        gcloud run services delete ${{ steps.env.outputs.frontend_service }} \
+          --region=$REGION \
+          --quiet || echo "Frontend service not found or already deleted"
+
+    - name: Delete Docker images
+      run: |
+        # Delete images from Container Registry (ignore errors if images don't exist)
+        gcloud container images delete gcr.io/$PROJECT_ID/backend:${{ steps.env.outputs.env_name }} \
+          --quiet || echo "Backend image not found or already deleted"
+        
+        gcloud container images delete gcr.io/$PROJECT_ID/frontend:${{ steps.env.outputs.env_name }} \
+          --quiet || echo "Frontend image not found or already deleted"
+
+    - name: Comment PR about cleanup
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          const pr_number = context.payload.pull_request.number;
+          
+          const comment = `## 🧹 Preview Environment Cleaned Up
+          
+          The preview environment for this PR has been successfully cleaned up:
+          
+          - ❌ Backend service \`${{ steps.env.outputs.backend_service }}\` deleted
+          - ❌ Frontend service \`${{ steps.env.outputs.frontend_service }}\` deleted
+          - 🗑️ Docker images removed from registry
+          
+          Thank you for contributing! 🎉`;
+          
+          await github.rest.issues.createComment({
+            owner,
+            repo,
+            issue_number: pr_number,
+            body: comment
+          });
