@@ -298,6 +298,7 @@ For production deployment, consider:
 
 - [Infrastructure Documentation](./infra/README.md)
 - [Backend API Documentation](./backend/README.md)
+- **[Backend Deployment Guide](./backend/docs/DEPLOYMENT.md)** - Complete CI/CD and deployment instructions
 - [Frontend Documentation](./frontend/README.md)
 - [Troubleshooting Guide](./scripts/README.md)
 

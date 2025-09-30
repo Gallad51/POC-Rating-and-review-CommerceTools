@@ -12,6 +12,8 @@ Secure middleware API for managing product ratings and reviews with CommerceTool
 - [Security](#security)
 - [Testing](#testing)
 - [Configuration](#configuration)
+- [Deployment](#deployment)
+- [CI/CD](#cicd)
 - [GDPR Compliance](#gdpr-compliance)
 
 ## ✨ Features
@@ -474,6 +476,195 @@ export const config = {
 };
 ```
 
+## 🚀 Deployment
+
+### Prerequisites
+
+Before deploying, ensure you have:
+
+1. **Google Cloud Platform Account**
+   - Project created with billing enabled
+   - Required APIs enabled (Cloud Run, Container Registry)
+   - Service account with appropriate permissions
+
+2. **CommerceTools Account** (Production only)
+   - Project created
+   - API client with credentials
+
+3. **GitHub Repository Secrets** (for CI/CD)
+   - `GCP_SA_KEY` - Service account JSON key
+   - `GCP_PROJECT_ID` - Your GCP project ID
+   - Production secrets (optional): `CTP_PROJECT_KEY`, `CTP_CLIENT_ID`, `CTP_CLIENT_SECRET`, `JWT_SECRET`
+
+### Quick Deploy
+
+```bash
+# Using Google Cloud Run
+gcloud run deploy ratings-reviews-backend \
+  --source . \
+  --region europe-west1 \
+  --allow-unauthenticated
+```
+
+### Deployment Options
+
+1. **CI/CD via GitHub Actions** (Recommended)
+   - Automatic preview deployments for every PR
+   - Automatic cleanup when PR is closed
+   - See [CI/CD section](#cicd) below
+
+2. **Manual Deployment**
+   - Using `gcloud` CLI
+   - Using Docker + Cloud Run
+   - See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for detailed instructions
+
+3. **Container Deployment**
+   - Docker image available
+   - Compatible with any container orchestration platform
+   - Cloud Run, Kubernetes, ECS, etc.
+
+### Required Environment Variables
+
+**Minimum for Preview/Development:**
+- `NODE_ENV` - Environment name (preview/development/production)
+- `PORT` - Server port (auto-set by Cloud Run)
+
+**Required for Production:**
+- `CTP_PROJECT_KEY` - CommerceTools project key
+- `CTP_CLIENT_ID` - CommerceTools client ID  
+- `CTP_CLIENT_SECRET` - CommerceTools client secret
+- `JWT_SECRET` - Strong random secret (min 32 characters)
+
+**Optional:**
+- `RATE_LIMIT_MAX_REQUESTS` - Max requests per minute (default: 10)
+- `CORS_ORIGIN` - Allowed origins (default: *)
+- `LOG_LEVEL` - Logging level (default: info)
+
+### Complete Deployment Guide
+
+For comprehensive deployment instructions including:
+- Step-by-step GCP setup
+- GitHub Actions configuration
+- Secret management
+- Environment variables
+- Monitoring setup
+- Troubleshooting
+
+See **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**
+
+## 🔄 CI/CD
+
+This project includes automated CI/CD via GitHub Actions.
+
+### Preview Deployments
+
+**Automatic on every Pull Request:**
+
+1. **Triggered by**: Opening, updating, or reopening a PR
+2. **What happens**:
+   - ✅ Code checkout
+   - ✅ Install dependencies
+   - ✅ Run tests (npm test)
+   - ✅ Build application (npm run build)
+   - ✅ Build Docker image
+   - ✅ Push to Google Container Registry
+   - ✅ Deploy to Cloud Run (preview environment)
+   - ✅ Run health checks
+   - ✅ Comment PR with deployment URLs
+
+3. **Environment naming**: `pr-{number}-{branch-name}`
+   - Backend: `ratings-reviews-backend-pr-123-feature-name`
+   - Accessible at: `https://ratings-reviews-backend-pr-123-*.run.app`
+
+4. **Auto-cleanup**: Preview environments are automatically deleted when PR is closed
+
+### Required GitHub Secrets
+
+Configure in **Settings > Secrets and variables > Actions**:
+
+| Secret | Description | Required |
+|--------|-------------|----------|
+| `GCP_SA_KEY` | Service account JSON key | ✅ Yes |
+| `GCP_PROJECT_ID` | Google Cloud project ID | ✅ Yes |
+
+### Optional Repository Variables
+
+Configure in **Settings > Secrets and variables > Actions > Variables**:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `GCP_REGION` | Deployment region | `europe-west1` |
+
+### Workflow Files
+
+- **`.github/workflows/pr-preview.yml`** - PR preview deployments
+- **`.github/workflows/pr-cleanup.yml`** - Cleanup on PR close
+
+### CI/CD Features
+
+✅ **Automatic Testing** - All tests run before deployment  
+✅ **Isolated Environments** - Each PR gets its own environment  
+✅ **Public URLs** - Direct access to preview deployments  
+✅ **Health Checks** - Verifies deployment before marking success  
+✅ **Auto Cleanup** - No manual cleanup needed  
+✅ **Cost Efficient** - Scales to zero when not in use  
+
+### Example PR Comment
+
+After successful deployment, GitHub Actions posts:
+
+```markdown
+## 🚀 Preview Deployment Ready!
+
+Your PR has been deployed to preview environments:
+
+| Service | URL | Status |
+|---------|-----|--------|
+| 🔧 **Backend API** | https://backend-url.run.app | ✅ |
+
+### Quick Links:
+- 📊 [Backend Health](https://backend-url.run.app/health)
+- 🔍 [API Documentation](https://backend-url.run.app/api-docs)
+- 📈 [Test Endpoint](https://backend-url.run.app/api/products/test-product-1/rating)
+```
+
+### Local Development vs CI/CD
+
+| Feature | Local Dev | CI/CD Preview | Production |
+|---------|-----------|---------------|------------|
+| CommerceTools | Mock | Mock | Real |
+| Authentication | Mock JWT | Mock JWT | Real JWT |
+| Environment | `development` | `preview` | `production` |
+| Tests | Manual | Automatic | Automatic |
+| Secrets | `.env` file | GitHub Secrets | Secret Manager |
+
+### Customizing CI/CD
+
+To modify the CI/CD workflow:
+
+1. Edit `.github/workflows/pr-preview.yml`
+2. Available options:
+   - Change deployment region
+   - Adjust resource limits (memory, CPU)
+   - Add additional test steps
+   - Configure custom environment variables
+   - Add deployment notifications
+
+Example customization:
+
+```yaml
+- name: Deploy backend to Cloud Run
+  run: |
+    gcloud run deploy ${{ steps.env.outputs.backend_service }} \
+      --image gcr.io/${{ env.PROJECT_ID }}/backend:${{ steps.env.outputs.env_name }} \
+      --memory 1Gi \              # Increase memory
+      --cpu 2 \                   # Increase CPU
+      --min-instances 1 \         # Keep warm
+      --set-env-vars "CUSTOM_VAR=value"
+```
+
+For more details, see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
+
 ## 🔒 GDPR Compliance
 
 ### Data Minimization
@@ -586,6 +777,38 @@ app.use((req, res, next) => {
 ## 🤝 Contributing
 
 See [CONTRIBUTING.md](../CONTRIBUTING.md) for development guidelines.
+
+## 📚 Additional Documentation
+
+- **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Complete deployment guide
+  - Prerequisites and GCP setup
+  - CI/CD configuration
+  - Environment variables reference
+  - Manual deployment instructions
+  - Troubleshooting guide
+
+- **[API_EXAMPLES.md](docs/API_EXAMPLES.md)** - Code examples
+  - cURL commands
+  - JavaScript/TypeScript examples
+  - React component examples
+  - Error handling patterns
+
+- **[SECURITY_GDPR_CHECKLIST.md](docs/SECURITY_GDPR_CHECKLIST.md)** - Security checklist
+  - 60+ security checkpoints
+  - GDPR compliance requirements
+  - Pre-production checklist
+  - Security incident response
+
+- **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)** - Implementation details
+  - Complete feature list
+  - Technical metrics
+  - Architecture decisions
+  - Next steps
+
+- **JSON Schemas** - Data validation schemas
+  - `docs/review-schema.json`
+  - `docs/review-response-schema.json`
+  - `docs/rating-response-schema.json`
 
 ## 📄 License
 
