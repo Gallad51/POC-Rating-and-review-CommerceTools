@@ -1,0 +1,33 @@
+# Preview Environment Configuration (PR deployments)
+# This file shows configuration for preview/PR environments
+
+project_id   = "ratings-reviews-poc"
+region       = "europe-west1"
+service_name = "ratings-reviews"
+environment  = "preview"  # Will be dynamically set in CI/CD
+
+# Docker images - will be set dynamically in CI/CD
+backend_image  = "gcr.io/ratings-reviews-poc/backend:pr-123"
+frontend_image = "gcr.io/ratings-reviews-poc/frontend:pr-123"
+
+# Backend secrets - disabled for preview (uses defaults/mocks)
+create_backend_secrets = false
+enable_commercetools   = false
+
+# Rate limiting - more permissive for testing
+rate_limit_window_ms     = "60000"
+rate_limit_max_requests  = "100"
+
+# CORS - allow all for preview
+cors_origin = "*"
+
+# Logging
+log_level = "debug"
+
+# Resource limits - minimal for preview
+backend_min_instances = "0"
+backend_max_instances = "5"
+backend_concurrency   = 80
+backend_timeout       = 300
+backend_cpu           = "1000m"
+backend_memory        = "512Mi"

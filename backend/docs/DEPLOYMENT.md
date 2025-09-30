@@ -1,15 +1,37 @@
 # Deployment Guide
 
-Complete guide for deploying the backend API to production and preview environments.
+Complete guide for deploying the backend API to production and preview environments using Terraform and GitHub Actions CI/CD.
+
+## 🚀 Quick Links
+
+- **[GitHub Actions Variables & Secrets](./GITHUB_ACTIONS_VARIABLES.md)** - Complete list of all required secrets and variables
+- **[Terraform Configuration](../../infra/)** - Infrastructure as Code for automated deployment
+- **[CI/CD Workflow](../../.github/workflows/pr-preview.yml)** - Automated preview deployments
 
 ## Table of Contents
 
+- [Overview](#overview)
 - [Prerequisites](#prerequisites)
+- [Terraform Integration](#terraform-integration)
 - [CI/CD Deployment](#cicd-deployment)
 - [Environment Variables](#environment-variables)
 - [Manual Deployment](#manual-deployment)
 - [Post-Deployment](#post-deployment)
 - [Troubleshooting](#troubleshooting)
+
+## Overview
+
+This backend can be deployed using:
+
+1. **Terraform + GitHub Actions** (Recommended) - Fully automated with Infrastructure as Code
+2. **GitHub Actions Only** - Using existing CI/CD workflows
+3. **Manual Deployment** - Using gcloud CLI or Docker
+
+All deployment methods support:
+- Preview environments (automatic for PRs)
+- Production environments (manual trigger)
+- Secret management via GCP Secret Manager
+- Auto-scaling with Cloud Run
 
 ## Prerequisites
 
@@ -100,6 +122,131 @@ Configure secrets and variables in your repository:
 | Variable Name | Description | Default | Required |
 |---------------|-------------|---------|----------|
 | `GCP_REGION` | GCP region for deployment | `europe-west1` | No |
+
+**For complete list of all secrets and variables, see [GITHUB_ACTIONS_VARIABLES.md](./GITHUB_ACTIONS_VARIABLES.md)**
+
+## Terraform Integration
+
+### Overview
+
+The backend infrastructure is managed using Terraform for consistent, repeatable deployments. Terraform configuration is located in the `infra/` directory.
+
+### Terraform Files
+
+- **`infra/backend.tf`** - Backend-specific Cloud Run configuration with secrets
+- **`infra/variables.tf`** - All configurable variables (extended for backend)
+- **`infra/outputs.tf`** - Deployment outputs (URLs, service names)
+- **`infra/terraform.tfvars.preview.example`** - Preview environment example
+- **`infra/terraform.tfvars.production.example`** - Production environment example
+
+### Key Terraform Variables for Backend
+
+| Variable | Description | Preview Default | Production Required |
+|----------|-------------|-----------------|---------------------|
+| `create_backend_secrets` | Create secrets in Secret Manager | `false` | `true` |
+| `enable_commercetools` | Enable CommerceTools integration | `false` | `true` |
+| `jwt_secret` | JWT signing secret | default (insecure) | ✅ Required |
+| `ctp_project_key` | CommerceTools project key | - | ✅ Required |
+| `ctp_client_id` | CommerceTools client ID | - | ✅ Required |
+| `ctp_client_secret` | CommerceTools client secret | - | ✅ Required |
+| `rate_limit_max_requests` | Max requests per minute | `100` | `10` |
+| `backend_memory` | Memory allocation | `512Mi` | `1Gi` |
+| `backend_cpu` | CPU allocation | `1000m` | `2000m` |
+
+### Deploying with Terraform
+
+#### Preview Environment (PR)
+
+```bash
+cd infra
+
+# Initialize Terraform
+terraform init
+
+# Preview changes
+terraform plan \
+  -var="project_id=your-project-id" \
+  -var="environment=preview" \
+  -var="backend_image=gcr.io/your-project-id/backend:pr-123" \
+  -var="create_backend_secrets=false" \
+  -var="enable_commercetools=false"
+
+# Apply
+terraform apply \
+  -var="project_id=your-project-id" \
+  -var="environment=preview" \
+  -var="backend_image=gcr.io/your-project-id/backend:pr-123"
+```
+
+#### Production Environment
+
+```bash
+cd infra
+
+# Set secrets via environment variables (preferred)
+export TF_VAR_jwt_secret="$(openssl rand -base64 32)"
+export TF_VAR_ctp_project_key="your-commercetools-project"
+export TF_VAR_ctp_client_id="your-client-id"
+export TF_VAR_ctp_client_secret="your-client-secret"
+
+# Or use tfvars file
+cp terraform.tfvars.production.example terraform.tfvars
+# Edit terraform.tfvars with your values
+
+# Initialize Terraform
+terraform init
+
+# Preview changes
+terraform plan \
+  -var="project_id=your-production-project" \
+  -var="environment=prod" \
+  -var="backend_image=gcr.io/your-production-project/backend:v1.0.0" \
+  -var="create_backend_secrets=true" \
+  -var="enable_commercetools=true"
+
+# Apply
+terraform apply \
+  -var="project_id=your-production-project" \
+  -var="environment=prod" \
+  -var="backend_image=gcr.io/your-production-project/backend:v1.0.0" \
+  -var="create_backend_secrets=true" \
+  -var="enable_commercetools=true"
+```
+
+### Terraform Outputs
+
+After deployment, Terraform provides useful outputs:
+
+```bash
+# Get all outputs
+terraform output
+
+# Example output:
+# backend_url              = "https://ratings-reviews-backend-prod-abc123.run.app"
+# backend_health_check_url = "https://ratings-reviews-backend-prod-abc123.run.app/health"
+# backend_api_docs_url     = "https://ratings-reviews-backend-prod-abc123.run.app/api-docs"
+# backend_service_name     = "ratings-reviews-backend-prod"
+```
+
+### Terraform State Management
+
+**Important**: Use remote state for production:
+
+```hcl
+# infra/backend.tf (add this block)
+terraform {
+  backend "gcs" {
+    bucket = "your-terraform-state-bucket"
+    prefix = "terraform/state"
+  }
+}
+```
+
+Create the bucket:
+```bash
+gsutil mb gs://your-terraform-state-bucket
+gsutil versioning set on gs://your-terraform-state-bucket
+```
 
 ## CI/CD Deployment
 
