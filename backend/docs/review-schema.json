@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/review-schema.json",
+  "title": "Product Review",
+  "description": "Schema for product review submissions",
+  "type": "object",
+  "required": ["rating"],
+  "properties": {
+    "rating": {
+      "type": "integer",
+      "description": "Product rating from 1 to 5 stars",
+      "minimum": 1,
+      "maximum": 5,
+      "examples": [5, 4, 3]
+    },
+    "comment": {
+      "type": "string",
+      "description": "Optional review comment",
+      "maxLength": 1000,
+      "examples": [
+        "Great product! Highly recommended.",
+        "Good quality but delivery was slow."
+      ]
+    },
+    "authorName": {
+      "type": "string",
+      "description": "Optional anonymized author display name",
+      "maxLength": 100,
+      "pattern": "^[^<>]*$",
+      "examples": ["John D.", "Anonymous", "Sarah M."]
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "rating": 5,
+      "comment": "Excellent product! Exceeded my expectations.",
+      "authorName": "John D."
+    },
+    {
+      "rating": 4,
+      "comment": "Very good quality. Fast delivery."
+    },
+    {
+      "rating": 5
+    }
+  ]
+}
