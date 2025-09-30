@@ -7,7 +7,7 @@ on:
 
 # Prevent concurrent deployments to the same PR environment
 concurrency:
-  group: pr-preview-${{ github.event.number }}
+  group: pr-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 env:
@@ -25,6 +25,14 @@ jobs:
       pull-requests: write
 
     steps:
+    - name: Debug workflow info
+      run: |
+        echo "Workflow run: ${{ github.run_id }}"
+        echo "Event: ${{ github.event_name }}"
+        echo "PR number: ${{ github.event.pull_request.number }}"
+        echo "Ref: ${{ github.ref }}"
+        echo "Head ref: ${{ github.head_ref }}"
+        
     - name: Checkout code
       uses: actions/checkout@v4
 
@@ -129,18 +137,30 @@ jobs:
 
     - name: Ensure services are publicly accessible
       run: |
-        # Explicitly set IAM policy to allow unauthenticated access
+        # Wait for services to be fully deployed
+        sleep 5
+        
+        # Remove any authentication requirements and explicitly set public access
+        echo "Setting backend service to public..."
         gcloud run services add-iam-policy-binding ${{ steps.env.outputs.backend_service }} \
           --region=${{ env.REGION }} \
           --member="allUsers" \
           --role="roles/run.invoker" \
-          --quiet
+          --platform=managed
         
+        echo "Setting frontend service to public..."
         gcloud run services add-iam-policy-binding ${{ steps.env.outputs.frontend_service }} \
           --region=${{ env.REGION }} \
           --member="allUsers" \
           --role="roles/run.invoker" \
-          --quiet
+          --platform=managed
+        
+        # Verify the IAM policies
+        echo "Verifying backend IAM policy..."
+        gcloud run services get-iam-policy ${{ steps.env.outputs.backend_service }} --region=${{ env.REGION }}
+        
+        echo "Verifying frontend IAM policy..."
+        gcloud run services get-iam-policy ${{ steps.env.outputs.frontend_service }} --region=${{ env.REGION }}
 
     - name: Get service URLs
       id: urls
