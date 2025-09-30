@@ -101,12 +101,11 @@ jobs:
           --platform managed \
           --region ${{ env.REGION }} \
           --allow-unauthenticated \
-          --port 8080 \
           --memory 512Mi \
           --cpu 1 \
           --min-instances 0 \
           --max-instances 10 \
-          --set-env-vars "NODE_ENV=preview,PORT=8080" \
+          --set-env-vars "NODE_ENV=preview" \
           --timeout 300
 
     - name: Deploy frontend to Cloud Run
@@ -116,12 +115,11 @@ jobs:
           --platform managed \
           --region ${{ env.REGION }} \
           --allow-unauthenticated \
-          --port 8080 \
           --memory 512Mi \
           --cpu 1 \
           --min-instances 0 \
           --max-instances 10 \
-          --set-env-vars "NODE_ENV=preview,PORT=8080" \
+          --set-env-vars "NODE_ENV=preview" \
           --timeout 300
 
     - name: Get service URLs
