@@ -3,12 +3,8 @@
   "version": "1.0.0",
   "description": "Ratings & Reviews Microfrontend POC - Monorepo",
   "private": true,
-  "workspaces": [
-    "backend",
-    "frontend"
-  ],
   "scripts": {
-    "install:all": "npm install && npm run install:backend && npm run install:frontend",
+    "install:all": "npm run install:backend && npm run install:frontend",
     "install:backend": "cd backend && npm install",
     "install:frontend": "cd frontend && npm install",
     "build:all": "npm run build:backend && npm run build:frontend",
