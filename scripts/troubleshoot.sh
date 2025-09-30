@@ -8,7 +8,7 @@ set -e
 # Default values
 ENV_NAME=${1:-"dev"}
 PROJECT_ID=${2:-"ratings-reviews-poc"}
-REGION=${3:-"us-central1"}
+REGION=${3:-"europe-west1"}
 SERVICE_NAME="ratings-reviews"
 
 # Colors for output

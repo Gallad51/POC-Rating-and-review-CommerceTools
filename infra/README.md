@@ -87,7 +87,7 @@ infra/
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
 | `project_id` | string | `ratings-reviews-poc` | GCP Project ID |
-| `region` | string | `us-central1` | GCP Region for resources |
+| `region` | string | `europe-west1` | GCP Region for resources |
 | `service_name` | string | `ratings-reviews` | Base name for services |
 | `environment` | string | `dev` | Environment identifier |
 | `backend_image` | string | `gcr.io/.../backend:latest` | Backend Docker image |
@@ -198,7 +198,7 @@ resource "google_secret_manager_secret" "api_keys" {
 
 ```bash
 # Monitor Cloud Run usage
-gcloud run services list --region=us-central1
+gcloud run services list --region=europe-west1
 
 # Check container registry usage  
 gcloud container images list --repository=gcr.io/PROJECT_ID
@@ -355,7 +355,7 @@ terraform destroy                 # Destroy infrastructure
 terraform output                  # Show outputs
 
 # GCP resource management
-gcloud run services list --region=us-central1
+gcloud run services list --region=europe-west1
 gcloud container images list --repository=gcr.io/PROJECT_ID
 gcloud secrets list
 

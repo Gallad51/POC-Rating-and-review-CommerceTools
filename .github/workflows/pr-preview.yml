@@ -7,7 +7,7 @@ on:
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID || 'ratings-reviews-poc' }}
-  REGION: us-central1
+  REGION: ${{ vars.GCP_REGION || 'europe-west1' }}
   SERVICE_NAME: ratings-reviews
 
 jobs:

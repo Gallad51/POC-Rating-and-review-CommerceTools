@@ -30,9 +30,12 @@ This POC uses a **monorepo structure** with the following components:
 ### Prerequisites
 
 1. **Google Cloud Account** with billing enabled (free tier)
-2. **GitHub Repository** with the following secrets:
-   - `GCP_SA_KEY`: Service Account JSON key with Cloud Run permissions
-   - `GCP_PROJECT_ID`: Your GCP project ID (optional, defaults to `ratings-reviews-poc`)
+2. **GitHub Repository** with the following secrets and variables:
+   - **Secrets**:
+     - `GCP_SA_KEY`: Service Account JSON key with Cloud Run permissions
+     - `GCP_PROJECT_ID`: Your GCP project ID (optional, defaults to `ratings-reviews-poc`)
+   - **Variables** (optional):
+     - `GCP_REGION`: GCP region for deployments (optional, defaults to `europe-west1`)
 
 > **Note**: Required GCP APIs (Cloud Run, Container Registry, Artifact Registry, Secret Manager, etc.) are automatically enabled by the Terraform infrastructure configuration. No manual setup required.
 
@@ -205,7 +208,7 @@ Use the troubleshooting script:
 3. **Service Not Accessible**
    ```bash
    # Check service status
-   gcloud run services list --region=us-central1
+   gcloud run services list --region=europe-west1
    
    # View service logs
    gcloud logs read --service=SERVICE_NAME
@@ -215,13 +218,13 @@ Use the troubleshooting script:
 
 ```bash
 # List all Cloud Run services
-gcloud run services list --region=us-central1
+gcloud run services list --region=europe-west1
 
 # View service logs  
 gcloud logs read --service=ratings-reviews-backend-dev
 
 # Delete a service
-gcloud run services delete SERVICE_NAME --region=us-central1
+gcloud run services delete SERVICE_NAME --region=europe-west1
 
 # List container images
 gcloud container images list --repository=gcr.io/PROJECT_ID
