@@ -1,18 +1,56 @@
+/**
+ * Main Server Application
+ * Express server with CommerceTools integration for ratings and reviews
+ */
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
+import swaggerUi from 'swagger-ui-express';
+import { config, validateConfig } from './config';
+import { logger } from './config/logger';
+import { swaggerSpec } from './config/swagger';
+import routes from './routes';
+import { errorHandler, notFoundHandler } from './middleware/error.middleware';
 
-// Load environment variables
-dotenv.config();
+// Validate configuration
+try {
+  validateConfig();
+} catch (error: any) {
+  logger.error('Configuration validation failed', { error: error.message });
+  if (config.nodeEnv === 'production') {
+    process.exit(1);
+  }
+}
 
 const app = express();
-const PORT = parseInt(process.env.PORT || '8080', 10);
 
-// Middleware
+// Security middleware
 app.use(helmet());
-app.use(cors());
+
+// CORS configuration
+app.use(cors(config.cors));
+
+// Body parsing middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Request logging
+app.use((req, res, next) => {
+  logger.info('Incoming request', {
+    method: req.method,
+    path: req.path,
+    ip: req.ip,
+    userAgent: req.get('user-agent'),
+  });
+  next();
+});
+
+// API Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Ratings & Reviews API Documentation',
+}));
 
 // Health check endpoint (required for Cloud Run)
 app.get('/health', (req, res) => {
@@ -20,69 +58,68 @@ app.get('/health', (req, res) => {
     status: 'OK',
     timestamp: new Date().toISOString(),
     service: 'ratings-reviews-backend',
-    version: '1.0.0'
+    version: '1.0.0',
+    environment: config.nodeEnv,
   });
 });
 
-// API Routes
-app.get('/api/ratings', (req, res) => {
-  // Mock ratings data for POC
-  res.json({
-    ratings: [
-      { id: 1, productId: 'prod-1', rating: 4.5, comment: 'Great product!', userId: 'user-1' },
-      { id: 2, productId: 'prod-1', rating: 5.0, comment: 'Excellent quality', userId: 'user-2' }
-    ],
-    total: 2,
-    averageRating: 4.75
-  });
-});
-
-app.post('/api/ratings', (req, res) => {
-  const { productId, rating, comment, userId } = req.body;
-  
-  // Basic validation
-  if (!productId || !rating || !userId) {
-    return res.status(400).json({ error: 'Missing required fields' });
-  }
-
-  // Mock response for POC
-  res.status(201).json({
-    id: Date.now(),
-    productId,
-    rating,
-    comment,
-    userId,
-    createdAt: new Date().toISOString()
-  });
-});
-
-// Default route
+// Default route with API information
 app.get('/', (req, res) => {
   res.json({
     message: 'Ratings & Reviews Backend API',
     version: '1.0.0',
+    environment: config.nodeEnv,
+    documentation: '/api-docs',
     endpoints: {
       health: '/health',
-      ratings: '/api/ratings'
-    }
+      docs: '/api-docs',
+      auth: {
+        login: 'POST /api/auth/login',
+        verify: 'GET /api/auth/verify',
+      },
+      reviews: {
+        rating: 'GET /api/products/:productId/rating',
+        list: 'GET /api/products/:productId/reviews',
+        create: 'POST /api/products/:productId/reviews',
+        health: 'GET /api/reviews/health',
+      },
+    },
   });
 });
 
-// Error handling middleware
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Error:', err.message);
-  res.status(500).json({ error: 'Internal server error' });
-});
+// API Routes
+app.use('/api', routes);
 
 // 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
+app.use(notFoundHandler);
+
+// Global error handler (must be last)
+app.use(errorHandler);
 
 // Start server
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Health check available at http://localhost:${PORT}/health`);
+const server = app.listen(config.port, '0.0.0.0', () => {
+  logger.info(`Server started`, {
+    port: config.port,
+    environment: config.nodeEnv,
+    documentation: `http://localhost:${config.port}/api-docs`,
+  });
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    logger.info('Server closed');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  logger.info('SIGINT received, shutting down gracefully');
+  server.close(() => {
+    logger.info('Server closed');
+    process.exit(0);
+  });
 });
 
 export default app;
