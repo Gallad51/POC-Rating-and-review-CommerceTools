@@ -140,27 +140,25 @@ jobs:
         # Wait for services to be fully deployed
         sleep 5
         
-        # Remove any authentication requirements and explicitly set public access
+        # Remove any authentication requirements and explicitly set public access using beta commands
         echo "Setting backend service to public..."
-        gcloud run services add-iam-policy-binding ${{ steps.env.outputs.backend_service }} \
+        gcloud beta run services add-iam-policy-binding ${{ steps.env.outputs.backend_service }} \
           --region=${{ env.REGION }} \
           --member="allUsers" \
-          --role="roles/run.invoker" \
-          --platform=managed
+          --role="roles/run.invoker"
         
         echo "Setting frontend service to public..."
-        gcloud run services add-iam-policy-binding ${{ steps.env.outputs.frontend_service }} \
+        gcloud beta run services add-iam-policy-binding ${{ steps.env.outputs.frontend_service }} \
           --region=${{ env.REGION }} \
           --member="allUsers" \
-          --role="roles/run.invoker" \
-          --platform=managed
+          --role="roles/run.invoker"
         
         # Verify the IAM policies
         echo "Verifying backend IAM policy..."
-        gcloud run services get-iam-policy ${{ steps.env.outputs.backend_service }} --region=${{ env.REGION }}
+        gcloud beta run services get-iam-policy ${{ steps.env.outputs.backend_service }} --region=${{ env.REGION }}
         
         echo "Verifying frontend IAM policy..."
-        gcloud run services get-iam-policy ${{ steps.env.outputs.frontend_service }} --region=${{ env.REGION }}
+        gcloud beta run services get-iam-policy ${{ steps.env.outputs.frontend_service }} --region=${{ env.REGION }}
 
     - name: Get service URLs
       id: urls
