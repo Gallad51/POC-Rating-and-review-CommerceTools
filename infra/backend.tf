@@ -52,7 +52,7 @@ resource "google_secret_manager_secret" "jwt_secret" {
   secret_id = "${var.service_name}-jwt-secret-${var.environment}"
 
   replication {
-    automatic = true
+    auto {}
   }
 
   depends_on = [google_project_service.secret_manager]
@@ -72,7 +72,7 @@ resource "google_secret_manager_secret" "ctp_project_key" {
   secret_id = "${var.service_name}-ctp-project-key-${var.environment}"
 
   replication {
-    automatic = true
+    auto {}
   }
 
   depends_on = [google_project_service.secret_manager]
@@ -92,7 +92,7 @@ resource "google_secret_manager_secret" "ctp_client_id" {
   secret_id = "${var.service_name}-ctp-client-id-${var.environment}"
 
   replication {
-    automatic = true
+    auto {}
   }
 
   depends_on = [google_project_service.secret_manager]
@@ -112,7 +112,7 @@ resource "google_secret_manager_secret" "ctp_client_secret" {
   secret_id = "${var.service_name}-ctp-client-secret-${var.environment}"
 
   replication {
-    automatic = true
+    auto {}
   }
 
   depends_on = [google_project_service.secret_manager]

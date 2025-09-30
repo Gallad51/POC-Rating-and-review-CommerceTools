@@ -66,26 +66,8 @@ resource "google_project_service" "service_usage" {
 }
 
 # Create secrets in Secret Manager
-resource "google_secret_manager_secret" "api_keys" {
-  for_each = var.secrets
-  
-  secret_id = each.key
-  
-  replication {
-    automatic = true
-  }
-
-  depends_on = [google_project_service.secret_manager]
-}
-
-resource "google_secret_manager_secret_version" "api_keys" {
-  for_each = var.secrets
-  
-  secret      = google_secret_manager_secret.api_keys[each.key].id
-  secret_data = each.value
-
-  depends_on = [google_project_service.secret_manager]
-}
+# Note: Legacy secrets (api_keys) removed to avoid "sensitive value in for_each" error
+# All secrets are now managed in backend.tf for proper secret management
 
 # Backend Cloud Run Service is defined in backend.tf
 # (removed from here to avoid duplicate resource)
