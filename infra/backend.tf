@@ -147,10 +147,6 @@ resource "google_cloud_run_service" "backend_api" {
       containers {
         image = var.backend_image
 
-        ports {
-          container_port = 8080
-        }
-
         # Regular environment variables
         dynamic "env" {
           for_each = local.backend_env_vars
