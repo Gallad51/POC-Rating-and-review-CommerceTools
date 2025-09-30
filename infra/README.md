@@ -420,7 +420,7 @@ For production deployment, add:
    terraform init
    
    # Import existing resource
-   terraform import google_cloud_run_service.backend projects/PROJECT_ID/locations/REGION/services/SERVICE_NAME
+   terraform import google_cloud_run_service.backend_api projects/PROJECT_ID/locations/REGION/services/SERVICE_NAME
    ```
 
 4. **Resource Quota Exceeded**:
