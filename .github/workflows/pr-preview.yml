@@ -32,11 +32,17 @@ jobs:
       id: env
       run: |
         PR_NUMBER=${{ github.event.number }}
-        BRANCH_NAME=$(echo "${{ github.head_ref }}" | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]')
+        BRANCH_NAME=$(echo "${{ github.head_ref }}" | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]' | sed 's/^-\+\|-\+$//g' | cut -c1-20)
         ENV_NAME="pr-${PR_NUMBER}-${BRANCH_NAME}"
+        # Ensure service names comply with Cloud Run naming requirements (lowercase, alphanumeric and hyphens, max 63 chars)
+        BACKEND_SERVICE=$(echo "${SERVICE_NAME}-backend-${ENV_NAME}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g' | cut -c1-63)
+        FRONTEND_SERVICE=$(echo "${SERVICE_NAME}-frontend-${ENV_NAME}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g' | cut -c1-63)
+        echo "Environment name: ${ENV_NAME}"
+        echo "Backend service: ${BACKEND_SERVICE}"
+        echo "Frontend service: ${FRONTEND_SERVICE}"
         echo "env_name=${ENV_NAME}" >> $GITHUB_OUTPUT
-        echo "backend_service=${SERVICE_NAME}-backend-${ENV_NAME}" >> $GITHUB_OUTPUT
-        echo "frontend_service=${SERVICE_NAME}-frontend-${ENV_NAME}" >> $GITHUB_OUTPUT
+        echo "backend_service=${BACKEND_SERVICE}" >> $GITHUB_OUTPUT
+        echo "frontend_service=${FRONTEND_SERVICE}" >> $GITHUB_OUTPUT
 
     - name: Authenticate to Google Cloud
       id: auth
@@ -47,6 +53,14 @@ jobs:
 
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
+
+    - name: Configure gcloud project
+      run: |
+        echo "Project ID: ${{ env.PROJECT_ID }}"
+        echo "Region: ${{ env.REGION }}"
+        gcloud config set project ${{ env.PROJECT_ID }}
+        gcloud config set run/region ${{ env.REGION }}
+        gcloud config list
 
     - name: Configure Docker for GCR
       run: gcloud auth configure-docker
@@ -68,24 +82,24 @@ jobs:
     - name: Build backend Docker image
       run: |
         cd backend
-        docker build -t gcr.io/$PROJECT_ID/backend:${{ steps.env.outputs.env_name }} .
+        docker build -t gcr.io/${{ env.PROJECT_ID }}/backend:${{ steps.env.outputs.env_name }} .
 
     - name: Build frontend Docker image
       run: |
         cd frontend
-        docker build -t gcr.io/$PROJECT_ID/frontend:${{ steps.env.outputs.env_name }} .
+        docker build -t gcr.io/${{ env.PROJECT_ID }}/frontend:${{ steps.env.outputs.env_name }} .
 
     - name: Push Docker images
       run: |
-        docker push gcr.io/$PROJECT_ID/backend:${{ steps.env.outputs.env_name }}
-        docker push gcr.io/$PROJECT_ID/frontend:${{ steps.env.outputs.env_name }}
+        docker push gcr.io/${{ env.PROJECT_ID }}/backend:${{ steps.env.outputs.env_name }}
+        docker push gcr.io/${{ env.PROJECT_ID }}/frontend:${{ steps.env.outputs.env_name }}
 
     - name: Deploy backend to Cloud Run
       run: |
         gcloud run deploy ${{ steps.env.outputs.backend_service }} \
-          --image gcr.io/$PROJECT_ID/backend:${{ steps.env.outputs.env_name }} \
+          --image gcr.io/${{ env.PROJECT_ID }}/backend:${{ steps.env.outputs.env_name }} \
           --platform managed \
-          --region $REGION \
+          --region ${{ env.REGION }} \
           --allow-unauthenticated \
           --port 8080 \
           --memory 512Mi \
@@ -98,9 +112,9 @@ jobs:
     - name: Deploy frontend to Cloud Run
       run: |
         gcloud run deploy ${{ steps.env.outputs.frontend_service }} \
-          --image gcr.io/$PROJECT_ID/frontend:${{ steps.env.outputs.env_name }} \
+          --image gcr.io/${{ env.PROJECT_ID }}/frontend:${{ steps.env.outputs.env_name }} \
           --platform managed \
-          --region $REGION \
+          --region ${{ env.REGION }} \
           --allow-unauthenticated \
           --port 8080 \
           --memory 512Mi \
@@ -113,8 +127,8 @@ jobs:
     - name: Get service URLs
       id: urls
       run: |
-        BACKEND_URL=$(gcloud run services describe ${{ steps.env.outputs.backend_service }} --region=$REGION --format='value(status.url)')
-        FRONTEND_URL=$(gcloud run services describe ${{ steps.env.outputs.frontend_service }} --region=$REGION --format='value(status.url)')
+        BACKEND_URL=$(gcloud run services describe ${{ steps.env.outputs.backend_service }} --region=${{ env.REGION }} --format='value(status.url)')
+        FRONTEND_URL=$(gcloud run services describe ${{ steps.env.outputs.frontend_service }} --region=${{ env.REGION }} --format='value(status.url)')
         echo "backend_url=${BACKEND_URL}" >> $GITHUB_OUTPUT
         echo "frontend_url=${FRONTEND_URL}" >> $GITHUB_OUTPUT
 
@@ -122,7 +136,7 @@ jobs:
       run: |
         # Update the frontend to use the correct backend URL
         gcloud run services update ${{ steps.env.outputs.frontend_service }} \
-          --region $REGION \
+          --region ${{ env.REGION }} \
           --set-env-vars "BACKEND_URL=${{ steps.urls.outputs.backend_url }}"
 
     - name: Test deployments

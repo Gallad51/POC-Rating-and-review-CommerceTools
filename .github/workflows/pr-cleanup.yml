@@ -24,11 +24,14 @@ jobs:
       id: env
       run: |
         PR_NUMBER=${{ github.event.number }}
-        BRANCH_NAME=$(echo "${{ github.head_ref }}" | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]')
+        BRANCH_NAME=$(echo "${{ github.head_ref }}" | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]' | sed 's/^-\+\|-\+$//g' | cut -c1-20)
         ENV_NAME="pr-${PR_NUMBER}-${BRANCH_NAME}"
+        # Ensure service names comply with Cloud Run naming requirements (lowercase, alphanumeric and hyphens, max 63 chars)
+        BACKEND_SERVICE=$(echo "${SERVICE_NAME}-backend-${ENV_NAME}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g' | cut -c1-63)
+        FRONTEND_SERVICE=$(echo "${SERVICE_NAME}-frontend-${ENV_NAME}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g' | cut -c1-63)
         echo "env_name=${ENV_NAME}" >> $GITHUB_OUTPUT
-        echo "backend_service=${SERVICE_NAME}-backend-${ENV_NAME}" >> $GITHUB_OUTPUT
-        echo "frontend_service=${SERVICE_NAME}-frontend-${ENV_NAME}" >> $GITHUB_OUTPUT
+        echo "backend_service=${BACKEND_SERVICE}" >> $GITHUB_OUTPUT
+        echo "frontend_service=${FRONTEND_SERVICE}" >> $GITHUB_OUTPUT
 
     - name: Authenticate to Google Cloud
       id: auth
@@ -44,21 +47,21 @@ jobs:
       run: |
         # Delete backend service (ignore errors if service doesn't exist)
         gcloud run services delete ${{ steps.env.outputs.backend_service }} \
-          --region=$REGION \
+          --region=${{ env.REGION }} \
           --quiet || echo "Backend service not found or already deleted"
         
         # Delete frontend service (ignore errors if service doesn't exist)
         gcloud run services delete ${{ steps.env.outputs.frontend_service }} \
-          --region=$REGION \
+          --region=${{ env.REGION }} \
           --quiet || echo "Frontend service not found or already deleted"
 
     - name: Delete Docker images
       run: |
         # Delete images from Container Registry (ignore errors if images don't exist)
-        gcloud container images delete gcr.io/$PROJECT_ID/backend:${{ steps.env.outputs.env_name }} \
+        gcloud container images delete gcr.io/${{ env.PROJECT_ID }}/backend:${{ steps.env.outputs.env_name }} \
           --quiet || echo "Backend image not found or already deleted"
         
-        gcloud container images delete gcr.io/$PROJECT_ID/frontend:${{ steps.env.outputs.env_name }} \
+        gcloud container images delete gcr.io/${{ env.PROJECT_ID }}/frontend:${{ steps.env.outputs.env_name }} \
           --quiet || echo "Frontend image not found or already deleted"
 
     - name: Comment PR about cleanup
