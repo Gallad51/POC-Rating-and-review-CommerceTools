@@ -43,17 +43,43 @@ jobs:
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
 
-    - name: Delete Cloud Run services
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.6.0
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Terraform Init
       run: |
-        # Delete backend service (ignore errors if service doesn't exist)
-        gcloud run services delete ${{ steps.env.outputs.backend_service }} \
-          --region=${{ env.REGION }} \
-          --quiet || echo "Backend service not found or already deleted"
-        
-        # Delete frontend service (ignore errors if service doesn't exist)
-        gcloud run services delete ${{ steps.env.outputs.frontend_service }} \
-          --region=${{ env.REGION }} \
-          --quiet || echo "Frontend service not found or already deleted"
+        cd infra
+        terraform init
+
+    - name: Terraform Destroy
+      env:
+        TF_VAR_jwt_secret: ${{ secrets.TF_VAR_jwt_secret || 'mock-jwt-secret-for-preview-environment' }}
+        TF_VAR_ctp_project_key: ${{ secrets.TF_VAR_ctp_project_key || '' }}
+        TF_VAR_ctp_client_id: ${{ secrets.TF_VAR_ctp_client_id || '' }}
+        TF_VAR_ctp_client_secret: ${{ secrets.TF_VAR_ctp_client_secret || '' }}
+        TF_VAR_backend_memory: ${{ vars.TF_VAR_backend_memory || '512Mi' }}
+        TF_VAR_backend_cpu: ${{ vars.TF_VAR_backend_cpu || '1000m' }}
+        TF_VAR_backend_max_instances: ${{ vars.TF_VAR_backend_max_instances || '10' }}
+        TF_VAR_rate_limit_max_requests: ${{ vars.TF_VAR_rate_limit_max_requests || '100' }}
+        TF_VAR_cors_origin: ${{ vars.TF_VAR_cors_origin || '*' }}
+      run: |
+        cd infra
+        terraform destroy -auto-approve \
+          -var="project_id=${{ env.PROJECT_ID }}" \
+          -var="region=${{ env.REGION }}" \
+          -var="service_name=${{ env.SERVICE_NAME }}" \
+          -var="environment=${{ steps.env.outputs.env_name }}" \
+          -var="backend_image=gcr.io/${{ env.PROJECT_ID }}/backend:${{ steps.env.outputs.env_name }}" \
+          -var="frontend_image=gcr.io/${{ env.PROJECT_ID }}/frontend:${{ steps.env.outputs.env_name }}" \
+          -var="create_backend_secrets=false" \
+          -var="enable_commercetools=false" \
+          -var="backend_min_instances=0" \
+        || echo "Terraform destroy completed with warnings (services may not exist)"
 
     - name: Delete Docker images
       run: |

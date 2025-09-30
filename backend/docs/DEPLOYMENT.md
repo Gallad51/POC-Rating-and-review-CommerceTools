@@ -252,19 +252,20 @@ gsutil versioning set on gs://your-terraform-state-bucket
 
 ### Automatic PR Preview Deployments
 
-The repository is configured with GitHub Actions for automatic deployments:
+The repository is configured with GitHub Actions for automatic deployments **using Terraform for infrastructure provisioning**.
 
 #### How It Works
 
-1. **Open a Pull Request** → Triggers preview deployment
+1. **Open a Pull Request** → Triggers preview deployment via Terraform
 2. **Push to PR** → Updates preview deployment
-3. **Close/Merge PR** → Automatically cleans up preview environment
+3. **Close/Merge PR** → Automatically runs `terraform destroy` to clean up
 
 #### What Gets Deployed
 
-Each PR creates isolated preview environments:
+Each PR creates isolated preview environments using Terraform:
 - Backend API service: `ratings-reviews-backend-pr-{number}-{branch}`
 - Frontend service: `ratings-reviews-frontend-pr-{number}-{branch}`
+- All infrastructure managed as code
 
 #### Preview Deployment Process
 
@@ -282,23 +283,54 @@ on:
 3. ✅ Run tests
 4. ✅ Build Docker images
 5. ✅ Push to Google Container Registry
-6. ✅ Deploy to Cloud Run
-7. ✅ Run health checks
-8. ✅ Comment PR with URLs
+6. ✅ **Setup Terraform** (v1.6.0)
+7. ✅ **Terraform Init**
+8. ✅ **Terraform Plan** (with all required variables)
+9. ✅ **Terraform Apply** (automated)
+10. ✅ Get service URLs from Terraform outputs
+11. ✅ Run health checks
+12. ✅ Comment PR with URLs
+
+#### Terraform Integration
+
+The workflows now use Terraform for all infrastructure operations:
+
+**Preview Deployment:**
+```bash
+# Terraform applies with preview-friendly settings
+terraform apply \
+  -var="environment=pr-123-feature" \
+  -var="create_backend_secrets=false" \
+  -var="enable_commercetools=false" \
+  -var="backend_min_instances=0" \
+  -var="rate_limit_max_requests=100" \
+  -var="cors_origin=*"
+```
+
+**Cleanup:**
+```bash
+# Terraform destroys all resources
+terraform destroy -auto-approve \
+  -var="environment=pr-123-feature" \
+  # ... same variables as deployment
+```
+
+> **📚 For complete variable reference**, see [GITHUB_ACTIONS_VARIABLES.md](./GITHUB_ACTIONS_VARIABLES.md#terraform-integration)
 
 #### Environment Variables (Preview)
 
-Preview deployments automatically set:
+Preview deployments automatically set via Terraform:
 - `NODE_ENV=preview`
 - `PORT=8080`
-- JWT_SECRET uses default (not secure - preview only)
-- CommerceTools uses mock service
+- JWT_SECRET uses mock value (not secure - preview only)
+- CommerceTools uses mock service (`enable_commercetools=false`)
+- Scale to zero when idle (`backend_min_instances=0`)
 
 ### Production Deployment
 
-Production deployment requires manual trigger or merge to main:
+Production deployment uses the same Terraform configuration with different variables:
 
-#### Option 1: GitHub Actions (Recommended)
+#### Option 1: GitHub Actions with Terraform (Recommended)
 
 Create `.github/workflows/production-deploy.yml`:
 
@@ -308,6 +340,50 @@ name: Production Deploy
 on:
   push:
     branches: [main]
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+      
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      
+      - name: Terraform Apply Production
+        env:
+          TF_VAR_jwt_secret: ${{ secrets.TF_VAR_jwt_secret }}
+          TF_VAR_ctp_project_key: ${{ secrets.TF_VAR_ctp_project_key }}
+          TF_VAR_ctp_client_id: ${{ secrets.TF_VAR_ctp_client_id }}
+          TF_VAR_ctp_client_secret: ${{ secrets.TF_VAR_ctp_client_secret }}
+          TF_VAR_backend_memory: ${{ vars.TF_VAR_backend_memory || '1Gi' }}
+          TF_VAR_backend_cpu: ${{ vars.TF_VAR_backend_cpu || '2000m' }}
+        run: |
+          cd infra
+          terraform init
+          terraform apply -auto-approve \
+            -var="project_id=${{ secrets.GCP_PROJECT_ID }}" \
+            -var="region=${{ vars.GCP_REGION }}" \
+            -var="environment=prod" \
+            -var="backend_image=gcr.io/${{ secrets.GCP_PROJECT_ID }}/backend:latest" \
+            -var="frontend_image=gcr.io/${{ secrets.GCP_PROJECT_ID }}/frontend:latest" \
+            -var="create_backend_secrets=true" \
+            -var="enable_commercetools=true" \
+            -var="backend_min_instances=1" \
+            -var="backend_max_instances=100" \
+            -var="rate_limit_max_requests=10" \
+            -var="cors_origin=https://your-domain.com"
+```
+
+#### Option 2: Manual Terraform Deployment
   workflow_dispatch:
 
 env:

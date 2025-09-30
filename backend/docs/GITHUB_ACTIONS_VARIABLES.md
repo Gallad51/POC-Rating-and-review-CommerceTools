@@ -302,7 +302,184 @@ gh workflow run pr-preview.yml
 gh run list --workflow=pr-preview.yml
 ```
 
-## Troubleshooting
+## Terraform Integration
+
+### Workflow Overview
+
+The GitHub Actions workflows (`pr-preview.yml` and `pr-cleanup.yml`) are fully integrated with Terraform for infrastructure provisioning and management.
+
+#### PR Preview Workflow
+
+When a Pull Request is opened or updated:
+
+1. **Build Stage**: Code is built and tested
+2. **Docker Stage**: Docker images are built and pushed to GCR
+3. **Terraform Stage**: Infrastructure is provisioned using Terraform
+4. **Test Stage**: Health checks verify deployment
+5. **Comment Stage**: Deployment URLs are posted as PR comments
+
+```yaml
+# Workflow uses Terraform with these key steps:
+- Setup Terraform (v1.6.0)
+- Terraform Init
+- Terraform Plan (with all required variables)
+- Terraform Apply (automated)
+- Get outputs (backend_url, frontend_url)
+```
+
+#### PR Cleanup Workflow
+
+When a Pull Request is closed:
+
+1. **Terraform Destroy**: All infrastructure is removed
+2. **Image Cleanup**: Docker images are deleted from GCR
+3. **Comment**: Cleanup confirmation posted to PR
+
+### Terraform Variable Mapping
+
+GitHub Actions passes variables to Terraform in two ways:
+
+**1. Via Command-Line Arguments (`-var`)**:
+```yaml
+terraform apply \
+  -var="project_id=${{ env.PROJECT_ID }}" \
+  -var="region=${{ env.REGION }}" \
+  -var="service_name=${{ env.SERVICE_NAME }}" \
+  -var="environment=${{ steps.env.outputs.env_name }}" \
+  -var="backend_image=gcr.io/.../backend:tag" \
+  -var="frontend_image=gcr.io/.../frontend:tag"
+```
+
+**2. Via Environment Variables (`TF_VAR_*`)**:
+```yaml
+env:
+  TF_VAR_jwt_secret: ${{ secrets.TF_VAR_jwt_secret }}
+  TF_VAR_ctp_project_key: ${{ secrets.TF_VAR_ctp_project_key }}
+  TF_VAR_backend_memory: ${{ vars.TF_VAR_backend_memory }}
+```
+
+### Complete Variable Flow
+
+| GitHub Secret/Var | Environment Variable | Terraform Variable | Default (Preview) |
+|-------------------|---------------------|-------------------|-------------------|
+| `GCP_SA_KEY` | N/A (auth) | N/A | Required |
+| `GCP_PROJECT_ID` | `env.PROJECT_ID` | `project_id` | Required |
+| `GCP_REGION` | `vars.GCP_REGION` | `region` | `europe-west1` |
+| `SERVICE_NAME` | `env.SERVICE_NAME` | `service_name` | `ratings-reviews` |
+| N/A (computed) | `steps.env.outputs.env_name` | `environment` | `pr-{number}-{branch}` |
+| N/A (computed) | N/A | `backend_image` | Built in workflow |
+| N/A (computed) | N/A | `frontend_image` | Built in workflow |
+| `TF_VAR_jwt_secret` | `TF_VAR_jwt_secret` | `jwt_secret` | `mock-jwt-secret...` |
+| `TF_VAR_ctp_project_key` | `TF_VAR_ctp_project_key` | `ctp_project_key` | `""` |
+| `TF_VAR_ctp_client_id` | `TF_VAR_ctp_client_id` | `ctp_client_id` | `""` |
+| `TF_VAR_ctp_client_secret` | `TF_VAR_ctp_client_secret` | `ctp_client_secret` | `""` |
+| `TF_VAR_backend_memory` | `TF_VAR_backend_memory` | `backend_memory` | `512Mi` |
+| `TF_VAR_backend_cpu` | `TF_VAR_backend_cpu` | `backend_cpu` | `1000m` |
+| `TF_VAR_backend_max_instances` | `TF_VAR_backend_max_instances` | `backend_max_instances` | `10` |
+| `TF_VAR_rate_limit_max_requests` | `TF_VAR_rate_limit_max_requests` | `rate_limit_max_requests` | `100` |
+| `TF_VAR_cors_origin` | `TF_VAR_cors_origin` | `cors_origin` | `*` |
+| N/A (hardcoded) | N/A | `create_backend_secrets` | `false` |
+| N/A (hardcoded) | N/A | `enable_commercetools` | `false` |
+| N/A (hardcoded) | N/A | `backend_min_instances` | `0` |
+
+### Terraform Outputs Used by Workflow
+
+After Terraform applies, the workflow retrieves these outputs:
+
+```bash
+# Get service URLs from Terraform outputs
+terraform output -raw backend_url
+terraform output -raw frontend_url
+```
+
+These URLs are then:
+1. Used for health checks
+2. Posted as PR comments
+3. Stored as step outputs for subsequent steps
+
+### Preview Environment Configuration
+
+For preview deployments, Terraform uses POC-friendly settings:
+
+```hcl
+# In workflow, passed as -var flags:
+create_backend_secrets  = false  # Use mock/defaults
+enable_commercetools    = false  # Use mock service
+backend_min_instances   = 0      # Scale to zero
+rate_limit_max_requests = 100    # More permissive
+cors_origin             = "*"    # Open for testing
+```
+
+### Production Deployment Configuration
+
+For production, different values should be used:
+
+```bash
+# Set production secrets first
+gh secret set TF_VAR_jwt_secret --body "$(openssl rand -base64 32)"
+gh secret set TF_VAR_ctp_project_key --body "your-prod-project"
+gh secret set TF_VAR_ctp_client_id --body "your-prod-id"
+gh secret set TF_VAR_ctp_client_secret --body "your-prod-secret"
+
+# Set production variables
+gh variable set TF_VAR_backend_memory --body "1Gi"
+gh variable set TF_VAR_backend_cpu --body "2000m"
+gh variable set TF_VAR_backend_max_instances --body "100"
+gh variable set TF_VAR_rate_limit_max_requests --body "10"
+gh variable set TF_VAR_cors_origin --body "https://your-domain.com"
+
+# Then deploy with production values
+terraform apply \
+  -var="environment=prod" \
+  -var="create_backend_secrets=true" \
+  -var="enable_commercetools=true" \
+  -var="backend_min_instances=1"
+```
+
+### Workflow Files Reference
+
+#### `.github/workflows/pr-preview.yml`
+- **Trigger**: Pull request opened, synchronized, or reopened
+- **Actions**:
+  - Build and test code
+  - Build Docker images
+  - Push to GCR
+  - Run Terraform apply
+  - Test deployments
+  - Comment PR with URLs
+
+#### `.github/workflows/pr-cleanup.yml`
+- **Trigger**: Pull request closed
+- **Actions**:
+  - Run Terraform destroy
+  - Delete Docker images
+  - Comment PR about cleanup
+
+### Local Terraform Testing
+
+You can test Terraform configuration locally before committing:
+
+```bash
+cd infra
+
+# Initialize
+terraform init
+
+# Plan with preview settings
+terraform plan \
+  -var="project_id=your-project" \
+  -var="region=europe-west1" \
+  -var="service_name=ratings-reviews" \
+  -var="environment=local-test" \
+  -var="backend_image=gcr.io/your-project/backend:test" \
+  -var="frontend_image=gcr.io/your-project/frontend:test" \
+  -var="create_backend_secrets=false" \
+  -var="enable_commercetools=false"
+
+# Review plan output before applying
+```
+
+
 
 ### Error: "Permission Denied" During Deployment
 
