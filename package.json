@@ -1,0 +1,46 @@
+{
+  "name": "ratings-reviews-poc",
+  "version": "1.0.0",
+  "description": "Ratings & Reviews Microfrontend POC - Monorepo",
+  "private": true,
+  "scripts": {
+    "install:all": "npm run install:backend && npm run install:frontend",
+    "install:backend": "cd backend && npm install",
+    "install:frontend": "cd frontend && npm install",
+    "build:all": "npm run build:backend && npm run build:frontend",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "start:backend": "cd backend && npm start",
+    "start:frontend": "cd frontend && npm start",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "test:all": "npm run test:backend && npm run test:frontend",
+    "test:backend": "cd backend && npm test",
+    "test:frontend": "cd frontend && npm test",
+    "docker:build": "docker build -t ratings-backend ./backend && docker build -t ratings-frontend ./frontend",
+    "troubleshoot": "./scripts/troubleshoot.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Gallad51/POC-Rating-and-review-CommerceTools.git"
+  },
+  "keywords": [
+    "ratings",
+    "reviews",
+    "microfrontend",
+    "gcp",
+    "cloud-run",
+    "poc",
+    "monorepo"
+  ],
+  "author": "Gallad51",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Gallad51/POC-Rating-and-review-CommerceTools/issues"
+  },
+  "homepage": "https://github.com/Gallad51/POC-Rating-and-review-CommerceTools#readme",
+  "engines": {
+    "node": ">=18",
+    "npm": ">=8"
+  }
+}
