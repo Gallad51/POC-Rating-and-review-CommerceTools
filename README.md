@@ -34,6 +34,8 @@ This POC uses a **monorepo structure** with the following components:
    - `GCP_SA_KEY`: Service Account JSON key with Cloud Run permissions
    - `GCP_PROJECT_ID`: Your GCP project ID (optional, defaults to `ratings-reviews-poc`)
 
+> **Note**: Required GCP APIs (Cloud Run, Container Registry, Artifact Registry, Secret Manager, etc.) are automatically enabled by the Terraform infrastructure configuration. No manual setup required.
+
 ### Local Development
 
 1. **Clone the repository**:

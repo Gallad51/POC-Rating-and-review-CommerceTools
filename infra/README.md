@@ -30,10 +30,16 @@ This infrastructure setup is designed with **POC constraints** and **budget opti
 1. **Google Cloud Project** with billing enabled
 2. **Terraform CLI** (v1.0+)
 3. **gcloud CLI** authenticated
-4. **Required APIs enabled**:
-   - Cloud Run API
-   - Container Registry API
-   - Secret Manager API
+4. **Required APIs** (automatically enabled by Terraform):
+   - Cloud Run API (`run.googleapis.com`) - For running containers
+   - Container Registry API (`containerregistry.googleapis.com`) - For storing Docker images (legacy)
+   - Artifact Registry API (`artifactregistry.googleapis.com`) - For storing Docker images (recommended)
+   - Secret Manager API (`secretmanager.googleapis.com`) - For managing secrets
+   - Cloud Build API (`cloudbuild.googleapis.com`) - For building containers
+   - IAM API (`iam.googleapis.com`) - For managing permissions
+   - Service Usage API (`serviceusage.googleapis.com`) - For enabling other APIs
+
+   > **Note**: All APIs are automatically enabled by the Terraform configuration. No manual enablement required.
 
 ### Local Deployment
 

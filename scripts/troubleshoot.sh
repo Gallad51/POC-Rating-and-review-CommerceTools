@@ -76,7 +76,15 @@ fi
 
 # Check enabled APIs
 echo -e "\n${BLUE}4. Checking enabled APIs...${NC}"
-REQUIRED_APIS=("run.googleapis.com" "containerregistry.googleapis.com" "secretmanager.googleapis.com")
+REQUIRED_APIS=(
+    "run.googleapis.com"
+    "containerregistry.googleapis.com" 
+    "artifactregistry.googleapis.com"
+    "secretmanager.googleapis.com"
+    "cloudbuild.googleapis.com"
+    "iam.googleapis.com"
+    "serviceusage.googleapis.com"
+)
 
 for api in "${REQUIRED_APIS[@]}"; do
     if gcloud services list --enabled --filter="name:$api" --format="value(name)" | grep -q "$api"; then

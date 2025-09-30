@@ -37,6 +37,34 @@ resource "google_project_service" "container_registry" {
   disable_on_destroy         = false
 }
 
+resource "google_project_service" "artifact_registry" {
+  service = "artifactregistry.googleapis.com"
+  
+  disable_dependent_services = false
+  disable_on_destroy         = false
+}
+
+resource "google_project_service" "cloud_build" {
+  service = "cloudbuild.googleapis.com"
+  
+  disable_dependent_services = false
+  disable_on_destroy         = false
+}
+
+resource "google_project_service" "iam" {
+  service = "iam.googleapis.com"
+  
+  disable_dependent_services = false
+  disable_on_destroy         = false
+}
+
+resource "google_project_service" "service_usage" {
+  service = "serviceusage.googleapis.com"
+  
+  disable_dependent_services = false
+  disable_on_destroy         = false
+}
+
 # Create secrets in Secret Manager
 resource "google_secret_manager_secret" "api_keys" {
   for_each = var.secrets
@@ -46,6 +74,8 @@ resource "google_secret_manager_secret" "api_keys" {
   replication {
     automatic = true
   }
+
+  depends_on = [google_project_service.secret_manager]
 }
 
 resource "google_secret_manager_secret_version" "api_keys" {
@@ -53,6 +83,8 @@ resource "google_secret_manager_secret_version" "api_keys" {
   
   secret      = google_secret_manager_secret.api_keys[each.key].id
   secret_data = each.value
+
+  depends_on = [google_project_service.secret_manager]
 }
 
 # Backend Cloud Run Service
@@ -119,7 +151,11 @@ resource "google_cloud_run_service" "backend" {
     latest_revision = true
   }
 
-  depends_on = [google_project_service.cloud_run]
+  depends_on = [
+    google_project_service.cloud_run,
+    google_project_service.container_registry,
+    google_project_service.artifact_registry
+  ]
 }
 
 # Frontend Cloud Run Service  
@@ -172,7 +208,11 @@ resource "google_cloud_run_service" "frontend" {
     latest_revision = true
   }
 
-  depends_on = [google_project_service.cloud_run]
+  depends_on = [
+    google_project_service.cloud_run,
+    google_project_service.container_registry,
+    google_project_service.artifact_registry
+  ]
 }
 
 # Make services publicly accessible
