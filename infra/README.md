@@ -432,6 +432,23 @@ For production deployment, add:
    # Via GCP Console → IAM & Admin → Quotas
    ```
 
+5. **Terraform Apply Hangs on Cloud Run Creation**:
+   
+   **Symptom**: `terraform apply` hangs indefinitely during Cloud Run service creation, even though the services are successfully created in GCP.
+   
+   **Cause**: This was caused by conditional resource dependencies in the `depends_on` clause. When `create_backend_secrets=false`, Terraform would wait for secret resources that would never be created.
+   
+   **Solution**: The issue has been fixed. The Cloud Run services now only depend on API services that are always created:
+   ```hcl
+   depends_on = [
+     google_project_service.cloud_run,
+     google_project_service.container_registry,
+     google_project_service.artifact_registry
+   ]
+   ```
+   
+   If you still experience issues, ensure you're using the latest version of the Terraform configuration.
+
 ### Useful Commands
 
 ```bash
