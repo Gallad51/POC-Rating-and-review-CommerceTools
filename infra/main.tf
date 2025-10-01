@@ -93,10 +93,6 @@ resource "google_cloud_run_service" "frontend" {
       containers {
         image = var.frontend_image
         
-        ports {
-          container_port = 8080
-        }
-        
         env {
           name  = "PORT"
           value = "8080"

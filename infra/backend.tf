@@ -5,10 +5,6 @@ locals {
   backend_env_vars = concat(
     [
       {
-        name  = "PORT"
-        value = "8080"
-      },
-      {
         name  = "NODE_ENV"
         value = var.environment
       },
