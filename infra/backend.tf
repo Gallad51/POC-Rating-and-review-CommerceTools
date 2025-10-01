@@ -228,11 +228,7 @@ resource "google_cloud_run_service" "backend_api" {
   depends_on = [
     google_project_service.cloud_run,
     google_project_service.container_registry,
-    google_project_service.artifact_registry,
-    google_secret_manager_secret_version.jwt_secret,
-    google_secret_manager_secret_version.ctp_project_key,
-    google_secret_manager_secret_version.ctp_client_id,
-    google_secret_manager_secret_version.ctp_client_secret
+    google_project_service.artifact_registry
   ]
 }
 
