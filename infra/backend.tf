@@ -127,6 +127,10 @@ resource "google_cloud_run_service" "backend_api" {
   name     = "${var.service_name}-backend-${var.environment}"
   location = var.region
 
+  timeouts {
+    create = "3m"
+    update = "3m"
+  }
   template {
     metadata {
       annotations = {

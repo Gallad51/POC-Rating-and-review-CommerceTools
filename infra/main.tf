@@ -77,6 +77,11 @@ resource "google_cloud_run_service" "frontend" {
   name     = "${var.service_name}-frontend-${var.environment}"
   location = var.region
 
+  timeouts {
+    create = "3m"
+    update = "3m"
+  }
+
   template {
     metadata {
       annotations = {
