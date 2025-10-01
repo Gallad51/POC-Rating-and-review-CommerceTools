@@ -162,7 +162,10 @@ Required secrets for CI/CD:
 | Secret | Description | Required |
 |--------|-------------|----------|
 | `GCP_SA_KEY` | Service Account JSON key | ✅ Yes |
-| `GCP_PROJECT_ID` | Google Cloud Project ID | ⚪ Optional |
+| `GCP_PROJECT_ID` | Google Cloud Project ID | ✅ Yes |
+| `TF_STATE_BUCKET` | GCS bucket for Terraform state | ✅ Yes |
+
+For complete setup instructions, see [backend/docs/GITHUB_ACTIONS_VARIABLES.md](backend/docs/GITHUB_ACTIONS_VARIABLES.md).
 
 ## 🧪 Testing
 

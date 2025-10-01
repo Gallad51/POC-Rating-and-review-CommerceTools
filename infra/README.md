@@ -43,10 +43,23 @@ This infrastructure setup is designed with **POC constraints** and **budget opti
 
 ### Local Deployment
 
-1. **Initialize Terraform**:
+1. **Initialize Terraform with GCS backend**:
    ```bash
    cd infra
-   terraform init
+   
+   # Create backend config file (optional)
+   cat > backend-config.hcl <<EOF
+   bucket = "your-terraform-state-bucket"
+   prefix = "terraform/state/local"
+   EOF
+   
+   # Initialize with backend configuration
+   terraform init -backend-config=backend-config.hcl
+   
+   # Or initialize with inline config
+   terraform init \
+     -backend-config="bucket=your-terraform-state-bucket" \
+     -backend-config="prefix=terraform/state/local"
    ```
 
 2. **Configure variables** (optional):
@@ -65,9 +78,16 @@ This infrastructure setup is designed with **POC constraints** and **budget opti
    terraform apply -var="project_id=your-project-id"
    ```
 
+> **Note**: The GCS backend requires a pre-existing bucket. See [backend/docs/GITHUB_ACTIONS_VARIABLES.md](../backend/docs/GITHUB_ACTIONS_VARIABLES.md#terraform-state-bucket-setup) for setup instructions.
+
 ### CI/CD Deployment
 
-The infrastructure is **automatically managed** by GitHub Actions. Manual Terraform deployment is typically not needed for PR previews.
+The infrastructure is **automatically managed** by GitHub Actions with persistent state storage:
+- Each PR gets its own state: `gs://bucket/terraform/state/pr-{NUMBER}/`
+- State persists across commits to the same PR
+- State is automatically cleaned up when PR is closed
+
+Manual Terraform deployment is typically not needed for PR previews.
 
 ## 📁 File Structure
 
@@ -75,6 +95,7 @@ The infrastructure is **automatically managed** by GitHub Actions. Manual Terraf
 infra/
 ├── 📄 main.tf                           # Main Terraform configuration (base services)
 ├── 📄 backend.tf                        # Backend-specific configuration with secrets
+├── 📄 backend-config.tf                 # GCS backend configuration for state storage
 ├── 📄 variables.tf                      # Input variables (extended for backend)
 ├── 📄 outputs.tf                        # Output values (URLs, service names)
 ├── 📄 terraform.tfvars.example          # Example variables file (legacy)
