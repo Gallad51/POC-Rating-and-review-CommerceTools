@@ -718,6 +718,31 @@ docker push gcr.io/$PROJECT_ID/backend:tag
 2. Check workflow logs in Actions tab
 3. Verify service account has correct permissions
 
+#### 6. Terraform Apply Hangs on Cloud Run Creation
+
+**Problem**: `terraform apply` hangs indefinitely during Cloud Run service creation in CI/CD, even though the services are successfully created in GCP.
+
+**Solution**:
+This issue has been fixed in the latest version. The problem was caused by conditional resource dependencies in the `depends_on` clause. When `create_backend_secrets=false` (preview environments), Terraform would wait for secret resources that would never be created.
+
+If you encounter this issue:
+1. Ensure you're using the latest Terraform configuration from the repository
+2. The fix removes conditional secret dependencies from Cloud Run service `depends_on` clauses
+3. Services now only depend on API services that are always created
+
+If the issue persists, check:
+```bash
+# Verify services are created
+gcloud run services list --region=$REGION
+
+# Check Terraform state
+cd infra && terraform show
+
+# If stuck, you can destroy and recreate
+terraform destroy -target=google_cloud_run_service.backend_api
+terraform apply
+```
+
 ### Debug Checklist
 
 - [ ] Service account has all required roles
