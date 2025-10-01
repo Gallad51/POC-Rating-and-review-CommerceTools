@@ -1,0 +1,44 @@
+# Production Environment Configuration
+# Copy this file to terraform.tfvars and fill in your values
+
+project_id   = "your-production-project-id"
+region       = "europe-west1"
+service_name = "ratings-reviews"
+environment  = "prod"
+
+# Docker images - use specific tags in production
+backend_image  = "gcr.io/your-production-project-id/backend:v1.0.0"
+frontend_image = "gcr.io/your-production-project-id/frontend:v1.0.0"
+
+# Backend secrets - REQUIRED for production
+create_backend_secrets = true
+enable_commercetools   = true
+
+# JWT Secret - MUST be changed in production (min 32 characters)
+jwt_secret = ""  # Set via TF_VAR_jwt_secret environment variable or Secret Manager
+
+# CommerceTools credentials - REQUIRED when enable_commercetools = true
+ctp_project_key    = ""  # Set via TF_VAR_ctp_project_key
+ctp_client_id      = ""  # Set via TF_VAR_ctp_client_id
+ctp_client_secret  = ""  # Set via TF_VAR_ctp_client_secret
+ctp_api_url        = "https://api.europe-west1.gcp.commercetools.com"
+ctp_auth_url       = "https://auth.europe-west1.gcp.commercetools.com"
+ctp_scopes         = "manage_project:your-project view_products:your-project"
+
+# Rate limiting - production values
+rate_limit_window_ms    = "60000"    # 1 minute
+rate_limit_max_requests = "10"       # 10 requests per minute per IP
+
+# CORS - restrict to your domains
+cors_origin = "https://your-domain.com,https://www.your-domain.com"
+
+# Logging
+log_level = "warn"  # Less verbose for production
+
+# Resource limits - production scale
+backend_min_instances = "1"     # Keep at least 1 instance warm
+backend_max_instances = "100"   # Scale up to 100 instances
+backend_concurrency   = 80      # Max concurrent requests per instance
+backend_timeout       = 300     # 5 minutes
+backend_cpu           = "2000m" # 2 vCPUs
+backend_memory        = "1Gi"   # 1GB RAM

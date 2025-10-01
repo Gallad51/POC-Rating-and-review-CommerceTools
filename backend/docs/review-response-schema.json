@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/review-response-schema.json",
+  "title": "Product Review Response",
+  "description": "Schema for product review API response",
+  "type": "object",
+  "required": ["id", "productId", "rating", "createdAt"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique review identifier",
+      "pattern": "^review-[0-9]+$",
+      "examples": ["review-123", "review-456"]
+    },
+    "productId": {
+      "type": "string",
+      "description": "Product identifier",
+      "examples": ["prod-123", "test-product-1"]
+    },
+    "rating": {
+      "type": "integer",
+      "description": "Product rating from 1 to 5 stars",
+      "minimum": 1,
+      "maximum": 5,
+      "examples": [5, 4, 3]
+    },
+    "comment": {
+      "type": ["string", "null"],
+      "description": "Review comment (sanitized)",
+      "maxLength": 1000,
+      "examples": [
+        "Great product! Highly recommended.",
+        null
+      ]
+    },
+    "authorName": {
+      "type": ["string", "null"],
+      "description": "Anonymized author display name",
+      "maxLength": 100,
+      "examples": ["John D.", "Anonymous", null]
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of review creation",
+      "examples": ["2024-01-20T10:00:00.000Z"]
+    },
+    "updatedAt": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of last update",
+      "examples": ["2024-01-21T15:30:00.000Z", null]
+    },
+    "isVerifiedPurchase": {
+      "type": ["boolean", "null"],
+      "description": "Whether this review is from a verified purchase",
+      "examples": [true, false, null]
+    },
+    "helpfulCount": {
+      "type": ["integer", "null"],
+      "description": "Number of users who found this review helpful",
+      "minimum": 0,
+      "examples": [10, 0, null]
+    },
+    "reportCount": {
+      "type": ["integer", "null"],
+      "description": "Number of times this review was reported",
+      "minimum": 0,
+      "examples": [0, null]
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "id": "review-123",
+      "productId": "prod-456",
+      "rating": 5,
+      "comment": "Excellent product! Highly recommended.",
+      "authorName": "John D.",
+      "createdAt": "2024-01-20T10:00:00.000Z",
+      "updatedAt": null,
+      "isVerifiedPurchase": true,
+      "helpfulCount": 10,
+      "reportCount": 0
+    },
+    {
+      "id": "review-124",
+      "productId": "prod-456",
+      "rating": 4,
+      "comment": null,
+      "authorName": null,
+      "createdAt": "2024-01-20T11:00:00.000Z",
+      "updatedAt": null,
+      "isVerifiedPurchase": false,
+      "helpfulCount": null,
+      "reportCount": null
+    }
+  ]
+}

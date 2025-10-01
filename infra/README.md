@@ -73,26 +73,114 @@ The infrastructure is **automatically managed** by GitHub Actions. Manual Terraf
 
 ```
 infra/
-├── 📄 main.tf              # Main Terraform configuration
-├── 📄 variables.tf         # Input variables and defaults  
-├── 📄 outputs.tf           # Output values (URLs, service names)
-├── 📄 README.md            # This documentation
-└── 📄 terraform.tfvars.example  # Example variables file
+├── 📄 main.tf                           # Main Terraform configuration (base services)
+├── 📄 backend.tf                        # Backend-specific configuration with secrets
+├── 📄 variables.tf                      # Input variables (extended for backend)
+├── 📄 outputs.tf                        # Output values (URLs, service names)
+├── 📄 terraform.tfvars.example          # Example variables file (legacy)
+├── 📄 terraform.tfvars.preview.example  # Preview environment configuration
+├── 📄 terraform.tfvars.production.example  # Production environment configuration
+└── 📄 README.md                         # This documentation
 ```
+
+### Backend Configuration
+
+The **`backend.tf`** file contains backend-specific infrastructure:
+
+- **Secrets Management**: JWT secret, CommerceTools credentials
+- **Environment Variables**: Rate limiting, CORS, logging
+- **Resource Configuration**: Memory, CPU, scaling limits
+- **IAM Permissions**: Secret access for Cloud Run
+
+**Key Features:**
+- ✅ Conditional secret creation (disabled for preview, enabled for production)
+- ✅ CommerceTools integration toggle
+- ✅ Configurable rate limiting and security settings
+- ✅ Automatic secret access permissions
 
 ## ⚙️ Configuration
 
-### Variables
+### Core Variables
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
 | `project_id` | string | `ratings-reviews-poc` | GCP Project ID |
 | `region` | string | `europe-west1` | GCP Region for resources |
 | `service_name` | string | `ratings-reviews` | Base name for services |
-| `environment` | string | `dev` | Environment identifier |
+| `environment` | string | `dev` | Environment identifier (dev/preview/prod) |
 | `backend_image` | string | `gcr.io/.../backend:latest` | Backend Docker image |
 | `frontend_image` | string | `gcr.io/.../frontend:latest` | Frontend Docker image |
-| `secrets` | map(string) | Mock values | Secret Manager secrets |
+
+### Backend-Specific Variables
+
+#### Secrets Management
+
+| Variable | Type | Default | Description | Required For |
+|----------|------|---------|-------------|--------------|
+| `create_backend_secrets` | bool | `false` | Create secrets in Secret Manager | Production |
+| `jwt_secret` | string | `default...` | JWT signing secret (min 32 chars) | Production |
+| `enable_commercetools` | bool | `false` | Enable real CommerceTools integration | Production |
+| `ctp_project_key` | string | `""` | CommerceTools project key | Production w/ CT |
+| `ctp_client_id` | string | `""` | CommerceTools client ID | Production w/ CT |
+| `ctp_client_secret` | string | `""` | CommerceTools client secret | Production w/ CT |
+
+#### Application Configuration
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `rate_limit_window_ms` | string | `"60000"` | Rate limit window (milliseconds) |
+| `rate_limit_max_requests` | string | `"10"` | Max requests per window |
+| `cors_origin` | string | `"*"` | Allowed CORS origins |
+| `log_level` | string | `"info"` | Logging level |
+| `ctp_api_url` | string | `https://api...` | CommerceTools API endpoint |
+| `ctp_auth_url` | string | `https://auth...` | CommerceTools Auth endpoint |
+
+#### Resource Limits
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `backend_min_instances` | string | `"0"` | Minimum instances (0 = scale to zero) |
+| `backend_max_instances` | string | `"10"` | Maximum instances |
+| `backend_concurrency` | number | `80` | Concurrent requests per instance |
+| `backend_timeout` | number | `300` | Request timeout (seconds) |
+| `backend_cpu` | string | `"1000m"` | CPU allocation (m = milli-cores) |
+| `backend_memory` | string | `"512Mi"` | Memory allocation |
+
+### Example Configurations
+
+#### Preview Environment
+
+```hcl
+# terraform.tfvars.preview
+environment            = "preview"
+create_backend_secrets = false  # Use defaults
+enable_commercetools   = false  # Use mock service
+rate_limit_max_requests = "100" # More permissive
+cors_origin            = "*"    # Allow all origins
+log_level              = "debug"
+backend_min_instances  = "0"    # Scale to zero
+backend_max_instances  = "5"
+```
+
+#### Production Environment
+
+```hcl
+# terraform.tfvars.production
+environment             = "prod"
+create_backend_secrets  = true  # Create real secrets
+enable_commercetools    = true  # Use real API
+jwt_secret              = "..."  # Strong random secret
+ctp_project_key         = "..."  # From CommerceTools
+ctp_client_id           = "..."  # From CommerceTools
+ctp_client_secret       = "..."  # From CommerceTools
+rate_limit_max_requests = "10"   # Stricter limits
+cors_origin             = "https://your-domain.com"
+log_level               = "warn"
+backend_min_instances   = "1"    # Keep warm
+backend_max_instances   = "100"
+backend_cpu             = "2000m"
+backend_memory          = "1Gi"
+```
 
 ### Resource Configuration
 
@@ -332,7 +420,7 @@ For production deployment, add:
    terraform init
    
    # Import existing resource
-   terraform import google_cloud_run_service.backend projects/PROJECT_ID/locations/REGION/services/SERVICE_NAME
+   terraform import google_cloud_run_service.backend_api projects/PROJECT_ID/locations/REGION/services/SERVICE_NAME
    ```
 
 4. **Resource Quota Exceeded**:

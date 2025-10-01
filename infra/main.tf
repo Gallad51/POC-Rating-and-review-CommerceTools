@@ -66,102 +66,21 @@ resource "google_project_service" "service_usage" {
 }
 
 # Create secrets in Secret Manager
-resource "google_secret_manager_secret" "api_keys" {
-  for_each = var.secrets
-  
-  secret_id = each.key
-  
-  replication {
-    automatic = true
-  }
+# Note: Legacy secrets (api_keys) removed to avoid "sensitive value in for_each" error
+# All secrets are now managed in backend.tf for proper secret management
 
-  depends_on = [google_project_service.secret_manager]
-}
-
-resource "google_secret_manager_secret_version" "api_keys" {
-  for_each = var.secrets
-  
-  secret      = google_secret_manager_secret.api_keys[each.key].id
-  secret_data = each.value
-
-  depends_on = [google_project_service.secret_manager]
-}
-
-# Backend Cloud Run Service
-resource "google_cloud_run_service" "backend" {
-  name     = "${var.service_name}-backend-${var.environment}"
-  location = var.region
-
-  template {
-    metadata {
-      annotations = {
-        "autoscaling.knative.dev/minScale" = "0"
-        "autoscaling.knative.dev/maxScale" = "10"
-        "run.googleapis.com/cpu-throttling" = "true"
-      }
-    }
-    
-    spec {
-      container_concurrency = 80
-      timeout_seconds      = 300
-      
-      containers {
-        image = var.backend_image
-        
-        ports {
-          container_port = 8080
-        }
-        
-        env {
-          name  = "PORT"
-          value = "8080"
-        }
-        
-        env {
-          name  = "NODE_ENV"
-          value = var.environment
-        }
-        
-        # Add secret environment variables
-        dynamic "env" {
-          for_each = var.backend_secrets
-          content {
-            name = env.value.name
-            value_from {
-              secret_key_ref {
-                name = env.value.secret_name
-                key  = env.value.secret_key
-              }
-            }
-          }
-        }
-        
-        resources {
-          limits = {
-            cpu    = "1000m"
-            memory = "512Mi"
-          }
-        }
-      }
-    }
-  }
-  
-  traffic {
-    percent         = 100
-    latest_revision = true
-  }
-
-  depends_on = [
-    google_project_service.cloud_run,
-    google_project_service.container_registry,
-    google_project_service.artifact_registry
-  ]
-}
+# Backend Cloud Run Service is defined in backend.tf
+# (removed from here to avoid duplicate resource)
 
 # Frontend Cloud Run Service  
 resource "google_cloud_run_service" "frontend" {
   name     = "${var.service_name}-frontend-${var.environment}"
   location = var.region
+
+  timeouts {
+    create = "3m"
+    update = "3m"
+  }
 
   template {
     metadata {
@@ -178,15 +97,6 @@ resource "google_cloud_run_service" "frontend" {
       
       containers {
         image = var.frontend_image
-        
-        ports {
-          container_port = 8080
-        }
-        
-        env {
-          name  = "PORT"
-          value = "8080"
-        }
         
         env {
           name  = "NODE_ENV" 
@@ -215,14 +125,8 @@ resource "google_cloud_run_service" "frontend" {
   ]
 }
 
-# Make services publicly accessible
-resource "google_cloud_run_service_iam_member" "backend_noauth" {
-  service  = google_cloud_run_service.backend.name
-  location = google_cloud_run_service.backend.location
-  role     = "roles/run.invoker"
-  member   = "allUsers"
-}
-
+# Backend IAM is defined in backend.tf
+# Make frontend publicly accessible
 resource "google_cloud_run_service_iam_member" "frontend_noauth" {
   service  = google_cloud_run_service.frontend.name
   location = google_cloud_run_service.frontend.location

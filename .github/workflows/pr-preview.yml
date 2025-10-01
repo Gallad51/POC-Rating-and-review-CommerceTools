@@ -111,77 +111,73 @@ jobs:
         docker push gcr.io/${{ env.PROJECT_ID }}/backend:${{ steps.env.outputs.env_name }}
         docker push gcr.io/${{ env.PROJECT_ID }}/frontend:${{ steps.env.outputs.env_name }}
 
-    - name: Deploy backend to Cloud Run
-      run: |
-        gcloud run deploy ${{ steps.env.outputs.backend_service }} \
-          --image gcr.io/${{ env.PROJECT_ID }}/backend:${{ steps.env.outputs.env_name }} \
-          --platform managed \
-          --region ${{ env.REGION }} \
-          --allow-unauthenticated \
-          --memory 512Mi \
-          --cpu 1 \
-          --min-instances 0 \
-          --max-instances 10 \
-          --set-env-vars "NODE_ENV=preview" \
-          --timeout 300
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.6.0
 
-    - name: Deploy frontend to Cloud Run
+    - name: Terraform Init
       run: |
-        gcloud run deploy ${{ steps.env.outputs.frontend_service }} \
-          --image gcr.io/${{ env.PROJECT_ID }}/frontend:${{ steps.env.outputs.env_name }} \
-          --platform managed \
-          --region ${{ env.REGION }} \
-          --allow-unauthenticated \
-          --memory 512Mi \
-          --cpu 1 \
-          --min-instances 0 \
-          --max-instances 10 \
-          --set-env-vars "NODE_ENV=preview" \
-          --timeout 300
+        cd infra
+        terraform init
 
-    - name: Ensure services are publicly accessible
+    - name: Terraform Plan
+      env:
+        TF_VAR_jwt_secret: ${{ secrets.TF_VAR_jwt_secret || 'mock-jwt-secret-for-preview-environment' }}
+        TF_VAR_ctp_project_key: ${{ secrets.TF_VAR_ctp_project_key || '' }}
+        TF_VAR_ctp_client_id: ${{ secrets.TF_VAR_ctp_client_id || '' }}
+        TF_VAR_ctp_client_secret: ${{ secrets.TF_VAR_ctp_client_secret || '' }}
+        TF_VAR_backend_memory: ${{ vars.TF_VAR_backend_memory || '512Mi' }}
+        TF_VAR_backend_cpu: ${{ vars.TF_VAR_backend_cpu || '1000m' }}
+        TF_VAR_backend_max_instances: ${{ vars.TF_VAR_backend_max_instances || '10' }}
+        TF_VAR_rate_limit_max_requests: ${{ vars.TF_VAR_rate_limit_max_requests || '100' }}
+        TF_VAR_cors_origin: ${{ vars.TF_VAR_cors_origin || '*' }}
       run: |
-        # Wait for services to be fully deployed
-        sleep 5
-        
-        # Remove any authentication requirements and explicitly set public access using beta commands
-        echo "Setting backend service to public..."
-        gcloud beta run services add-iam-policy-binding ${{ steps.env.outputs.backend_service }} \
-          --region=${{ env.REGION }} \
-          --member="allUsers" \
-          --role="roles/run.invoker" \
-          --quiet
-        
-        echo "Setting frontend service to public..."
-        gcloud beta run services add-iam-policy-binding ${{ steps.env.outputs.frontend_service }} \
-          --region=${{ env.REGION }} \
-          --member="allUsers" \
-          --role="roles/run.invoker" \
-          --quiet
-        
-        # Verify the IAM policies
-        echo "Verifying backend IAM policy..."
-        gcloud beta run services get-iam-policy ${{ steps.env.outputs.backend_service }} \
-          --region=${{ env.REGION }}
-        
-        echo "Verifying frontend IAM policy..."
-        gcloud beta run services get-iam-policy ${{ steps.env.outputs.frontend_service }} \
-          --region=${{ env.REGION }}
+        cd infra
+        terraform plan \
+          -var="project_id=${{ env.PROJECT_ID }}" \
+          -var="region=${{ env.REGION }}" \
+          -var="service_name=${{ env.SERVICE_NAME }}" \
+          -var="environment=${{ steps.env.outputs.env_name }}" \
+          -var="backend_image=gcr.io/${{ env.PROJECT_ID }}/backend:${{ steps.env.outputs.env_name }}" \
+          -var="frontend_image=gcr.io/${{ env.PROJECT_ID }}/frontend:${{ steps.env.outputs.env_name }}" \
+          -var="create_backend_secrets=false" \
+          -var="enable_commercetools=false" \
+          -var="backend_min_instances=0" \
+          -out=tfplan
 
-    - name: Get service URLs
+    - name: Terraform Apply
+      env:
+        TF_VAR_jwt_secret: ${{ secrets.TF_VAR_jwt_secret || 'mock-jwt-secret-for-preview-environment' }}
+        TF_VAR_ctp_project_key: ${{ secrets.TF_VAR_ctp_project_key || '' }}
+        TF_VAR_ctp_client_id: ${{ secrets.TF_VAR_ctp_client_id || '' }}
+        TF_VAR_ctp_client_secret: ${{ secrets.TF_VAR_ctp_client_secret || '' }}
+        TF_VAR_backend_memory: ${{ vars.TF_VAR_backend_memory || '512Mi' }}
+        TF_VAR_backend_cpu: ${{ vars.TF_VAR_backend_cpu || '1000m' }}
+        TF_VAR_backend_max_instances: ${{ vars.TF_VAR_backend_max_instances || '10' }}
+        TF_VAR_rate_limit_max_requests: ${{ vars.TF_VAR_rate_limit_max_requests || '100' }}
+        TF_VAR_cors_origin: ${{ vars.TF_VAR_cors_origin || '*' }}
+      run: |
+        cd infra
+        terraform apply tfplan
+
+    - name: Get service URLs from Terraform outputs
       id: urls
       run: |
-        BACKEND_URL=$(gcloud run services describe ${{ steps.env.outputs.backend_service }} --region=${{ env.REGION }} --format='value(status.url)')
-        FRONTEND_URL=$(gcloud run services describe ${{ steps.env.outputs.frontend_service }} --region=${{ env.REGION }} --format='value(status.url)')
+        cd infra
+        BACKEND_URL=$(terraform output -raw backend_url 2>/dev/null || echo "")
+        FRONTEND_URL=$(terraform output -raw frontend_url 2>/dev/null || echo "")
+        
+        # Fallback to gcloud if Terraform outputs are not available
+        if [ -z "$BACKEND_URL" ]; then
+          BACKEND_URL=$(gcloud run services describe ${{ steps.env.outputs.backend_service }} --region=${{ env.REGION }} --format='value(status.url)' 2>/dev/null || echo "")
+        fi
+        if [ -z "$FRONTEND_URL" ]; then
+          FRONTEND_URL=$(gcloud run services describe ${{ steps.env.outputs.frontend_service }} --region=${{ env.REGION }} --format='value(status.url)' 2>/dev/null || echo "")
+        fi
+        
         echo "backend_url=${BACKEND_URL}" >> $GITHUB_OUTPUT
         echo "frontend_url=${FRONTEND_URL}" >> $GITHUB_OUTPUT
-
-    - name: Update frontend with backend URL
-      run: |
-        # Update the frontend to use the correct backend URL
-        gcloud run services update ${{ steps.env.outputs.frontend_service }} \
-          --region ${{ env.REGION }} \
-          --set-env-vars "BACKEND_URL=${{ steps.urls.outputs.backend_url }}"
 
     - name: Test deployments
       run: |
@@ -192,7 +188,7 @@ jobs:
         curl -f ${{ steps.urls.outputs.frontend_url }}/health || exit 1
         
         echo "Testing backend API..."
-        curl -f ${{ steps.urls.outputs.backend_url }}/api/ratings || exit 1
+        curl -f ${{ steps.urls.outputs.backend_url }}/api/reviews/health || exit 1
 
     - name: Comment PR with preview URLs
       uses: actions/github-script@v7
@@ -213,7 +209,7 @@ jobs:
           ### Quick Links:
           - 🌐 [Preview App](${{ steps.urls.outputs.frontend_url }})
           - 📊 [Backend Health](${{ steps.urls.outputs.backend_url }}/health)
-          - 🔍 [API Ratings](${{ steps.urls.outputs.backend_url }}/api/ratings)
+          - 🔍 [API Ratings](${{ steps.urls.outputs.backend_url }}/api/reviews/health)
           
           ### Environment Details:
           - **Environment**: \`${{ steps.env.outputs.env_name }}\`

@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/rating-response-schema.json",
+  "title": "Product Rating Summary",
+  "description": "Schema for product rating summary API response",
+  "type": "object",
+  "required": ["productId", "averageRating", "totalReviews", "ratingDistribution"],
+  "properties": {
+    "productId": {
+      "type": "string",
+      "description": "Product identifier",
+      "examples": ["prod-123", "test-product-1"]
+    },
+    "averageRating": {
+      "type": "number",
+      "description": "Average rating (0-5, rounded to 1 decimal)",
+      "minimum": 0,
+      "maximum": 5,
+      "examples": [4.5, 3.2, 5.0]
+    },
+    "totalReviews": {
+      "type": "integer",
+      "description": "Total number of reviews",
+      "minimum": 0,
+      "examples": [42, 0, 158]
+    },
+    "ratingDistribution": {
+      "type": "object",
+      "description": "Count of reviews for each star rating",
+      "required": ["1", "2", "3", "4", "5"],
+      "properties": {
+        "1": {
+          "type": "integer",
+          "description": "Number of 1-star reviews",
+          "minimum": 0
+        },
+        "2": {
+          "type": "integer",
+          "description": "Number of 2-star reviews",
+          "minimum": 0
+        },
+        "3": {
+          "type": "integer",
+          "description": "Number of 3-star reviews",
+          "minimum": 0
+        },
+        "4": {
+          "type": "integer",
+          "description": "Number of 4-star reviews",
+          "minimum": 0
+        },
+        "5": {
+          "type": "integer",
+          "description": "Number of 5-star reviews",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "productId": "prod-123",
+      "averageRating": 4.5,
+      "totalReviews": 42,
+      "ratingDistribution": {
+        "1": 2,
+        "2": 3,
+        "3": 8,
+        "4": 15,
+        "5": 14
+      }
+    },
+    {
+      "productId": "prod-456",
+      "averageRating": 0,
+      "totalReviews": 0,
+      "ratingDistribution": {
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0
+      }
+    }
+  ]
+}
