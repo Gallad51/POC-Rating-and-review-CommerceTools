@@ -30,10 +30,14 @@ This POC uses a **monorepo structure** with the following components:
 ### Prerequisites
 
 1. **Google Cloud Account** with billing enabled (free tier)
-2. **GitHub Repository** with the following secrets and variables:
+2. **Terraform State Bucket**: GCS bucket for storing infrastructure state
+   - Run the setup script: `./scripts/setup-terraform-state-bucket.sh your-project-id`
+   - See [setup instructions](backend/docs/GITHUB_ACTIONS_VARIABLES.md#terraform-state-bucket-setup) for details
+3. **GitHub Repository** with the following secrets and variables:
    - **Secrets**:
      - `GCP_SA_KEY`: Service Account JSON key with Cloud Run permissions
-     - `GCP_PROJECT_ID`: Your GCP project ID (optional, defaults to `ratings-reviews-poc`)
+     - `GCP_PROJECT_ID`: Your GCP project ID
+     - `TF_STATE_BUCKET`: GCS bucket name for Terraform state
    - **Variables** (optional):
      - `GCP_REGION`: GCP region for deployments (optional, defaults to `europe-west1`)
 

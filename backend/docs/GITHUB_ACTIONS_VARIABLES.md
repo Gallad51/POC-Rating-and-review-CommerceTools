@@ -27,6 +27,14 @@ Configure in: **Settings > Secrets and variables > Actions > Secrets**
 
 The Terraform state bucket is used to persist infrastructure state across workflow runs, ensuring that each PR maintains its state between commits.
 
+**Quick Setup with Script:**
+```bash
+# Run the automated setup script
+./scripts/setup-terraform-state-bucket.sh your-project-id
+```
+
+**Manual Setup:**
+
 1. **Create GCS Bucket for Terraform State:**
    ```bash
    # Create the bucket (replace with your preferred name)
@@ -35,8 +43,8 @@ The Terraform state bucket is used to persist infrastructure state across workfl
    # Enable versioning for state recovery
    gsutil versioning set on gs://your-terraform-state-bucket
    
-   # Set bucket to private
-   gsutil iam ch allUsers:objectViewer gs://your-terraform-state-bucket
+   # Set bucket to uniform access
+   gsutil uniformbucketlevelaccess set on gs://your-terraform-state-bucket
    ```
 
 2. **Grant Service Account Access:**
