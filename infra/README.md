@@ -101,8 +101,14 @@ infra/
 ├── 📄 terraform.tfvars.example          # Example variables file (legacy)
 ├── 📄 terraform.tfvars.preview.example  # Preview environment configuration
 ├── 📄 terraform.tfvars.production.example  # Production environment configuration
-└── 📄 README.md                         # This documentation
+├── 📄 README.md                         # This documentation
+└── 📄 TERRAFORM_STATE_MANAGEMENT.md     # Complete guide to GCS state backend
 ```
+
+### Key Documentation
+
+- **[TERRAFORM_STATE_MANAGEMENT.md](./TERRAFORM_STATE_MANAGEMENT.md)** - Complete guide to GCS backend, state lifecycle, troubleshooting
+- **[backend/docs/GITHUB_ACTIONS_VARIABLES.md](../backend/docs/GITHUB_ACTIONS_VARIABLES.md)** - GitHub setup instructions
 
 ### Backend Configuration
 
