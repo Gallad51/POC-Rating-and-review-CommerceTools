@@ -18,7 +18,8 @@
   ],
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "echo 'Building static assets...' && mkdir -p dist && cp -r public/* dist/",
+    "build:lib": "vite build",
     "build:static": "echo 'Building static assets...' && mkdir -p dist && cp -r public/* dist/",
     "preview": "vite preview",
     "start": "node server.js",

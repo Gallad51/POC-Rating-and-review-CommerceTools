@@ -75,8 +75,14 @@ Opens interactive demo at `http://localhost:5173`
 
 ### Build
 
+#### For Docker/Production (Static Assets)
 ```bash
 npm run build
+```
+
+#### For NPM Package (Library Mode)
+```bash
+npm run build:lib
 ```
 
 ### Run Tests
