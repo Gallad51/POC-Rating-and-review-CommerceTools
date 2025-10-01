@@ -105,7 +105,7 @@ resource "google_cloud_run_service" "frontend" {
         
         env {
           name  = "BACKEND_URL"
-          value = google_cloud_run_service.backend.status[0].url
+          value = google_cloud_run_service.backend_api.status[0].url
         }
         
         resources {
@@ -127,6 +127,7 @@ resource "google_cloud_run_service" "frontend" {
     google_project_service.cloud_run,
     google_project_service.container_registry,
     google_project_service.artifact_registry
+    google_cloud_run_service.backend_api
   ]
 }
 
