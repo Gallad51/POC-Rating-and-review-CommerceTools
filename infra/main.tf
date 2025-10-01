@@ -126,7 +126,7 @@ resource "google_cloud_run_service" "frontend" {
   depends_on = [
     google_project_service.cloud_run,
     google_project_service.container_registry,
-    google_project_service.artifact_registry
+    google_project_service.artifact_registry,
     google_cloud_run_service.backend_api
   ]
 }
