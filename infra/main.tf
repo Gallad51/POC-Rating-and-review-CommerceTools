@@ -103,6 +103,11 @@ resource "google_cloud_run_service" "frontend" {
           value = var.environment
         }
         
+        env {
+          name  = "BACKEND_URL"
+          value = google_cloud_run_service.backend.status[0].url
+        }
+        
         resources {
           limits = {
             cpu    = "1000m"

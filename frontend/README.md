@@ -75,21 +75,30 @@ Opens interactive demo at `http://localhost:5173`
 
 ### Build
 
-#### For Docker/Production (Static Assets)
+#### For Docker/Production (Demo App)
 ```bash
 npm run build
 ```
+Builds the Vue.js demo application to `dist/` directory.
 
 #### For NPM Package (Library Mode)
 ```bash
 npm run build:lib
 ```
+Builds the components as a library (ES/UMD modules).
 
 ### Run Tests
 
 ```bash
 npm test
 ```
+
+### Environment Variables
+
+For production deployment, the frontend server proxies API requests to the backend:
+
+- `BACKEND_URL` - Backend service URL (default: `http://localhost:8080`)
+- `PORT` - Server port (default: `8080`)
 
 ## 📖 Full Documentation
 
