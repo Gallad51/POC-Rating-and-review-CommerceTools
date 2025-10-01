@@ -1,54 +1,98 @@
-# 🎨 Frontend Service
+# Vue.js Components Documentation
 
-Static frontend application for the Ratings & Reviews POC.
+## 📦 Ratings & Reviews Microfrontend Components
+
+This package provides Vue.js 3 components for displaying and managing product ratings and reviews. Built with TypeScript, fully accessible, and optimized for microfrontend architecture.
 
 ## 🚀 Quick Start
 
+### Installation
+
 ```bash
-# Install dependencies
-npm install
+npm install ratings-reviews-frontend
+```
 
-# Build static assets
-npm run build
+### Basic Usage
 
-# Start development server
+```vue
+<script setup>
+import { RatingCompact, ReviewsList, ReviewFormButton } from 'ratings-reviews-frontend';
+</script>
+
+<template>
+  <div>
+    <!-- Compact rating display for product tiles -->
+    <RatingCompact
+      product-id="prod-123"
+      :average-rating="4.5"
+      :total-reviews="42"
+    />
+
+    <!-- Full reviews list for product detail page -->
+    <ReviewsList
+      product-id="prod-123"
+      :page-size="10"
+    />
+
+    <!-- Review submission button with modal form -->
+    <ReviewFormButton
+      product-id="prod-123"
+      @submitted="handleReviewSubmitted"
+    />
+  </div>
+</template>
+```
+
+## 📚 Components
+
+### 1. RatingCompact
+
+Compact rating display suitable for product tiles in PLP (Product List Page).
+
+[View full component documentation](#ratingcompact-component)
+
+### 2. ReviewsList
+
+Complete reviews display with rating summary, filters, sorting, and pagination for PDP.
+
+[View full component documentation](#reviewslist-component)
+
+### 3. ReviewFormButton
+
+Button that opens a modal form for submitting new reviews with GDPR compliance.
+
+[View full component documentation](#reviewformbutton-component)
+
+## 🔧 Development
+
+### Run Development Server
+
+```bash
 npm run dev
-
-# Start production server
-npm start
 ```
 
-## 📁 Structure
+Opens interactive demo at `http://localhost:5173`
 
-```
-frontend/
-├── 📄 server.js           # Node.js static file server
-├── 📄 package.json        # Dependencies
-├── 📁 public/             # Source files
-│   └── 📄 index.html      # Main application
-└── 📁 dist/               # Built assets (generated)
-```
-
-## 🔧 Configuration
-
-### Environment Variables
-- `PORT` - Server port (default: 8080)
-- `NODE_ENV` - Environment (dev/preview/prod)
-- `BACKEND_URL` - Backend API URL (auto-configured in CI/CD)
-
-## 🐳 Docker
+### Build
 
 ```bash
-# Build image
-docker build -t ratings-frontend .
-
-# Run container
-docker run -p 8080:8080 ratings-frontend
+npm run build
 ```
 
-## 🌐 Features
+### Run Tests
 
-- Responsive design
-- Real-time API integration
-- Health check endpoint
-- Static asset caching
+```bash
+npm test
+```
+
+## 📖 Full Documentation
+
+See [COMPONENTS.md](./docs/COMPONENTS.md) for complete component API documentation.
+
+## 🌐 Demo
+
+Access the live demo application at: `http://localhost:5173` (after running `npm run dev`)
+
+## 📝 License
+
+MIT
