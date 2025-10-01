@@ -54,7 +54,9 @@ jobs:
     - name: Terraform Init
       run: |
         cd infra
-        terraform init
+        terraform init \
+          -backend-config="bucket=${{ secrets.TF_STATE_BUCKET || vars.TF_STATE_BUCKET }}" \
+          -backend-config="prefix=terraform/state/pr-${{ github.event.pull_request.number }}"
 
     - name: Terraform Destroy
       env:
@@ -101,6 +103,12 @@ jobs:
         
         gcloud container images delete gcr.io/${{ env.PROJECT_ID }}/frontend:${{ steps.env.outputs.env_name }} \
           --quiet || echo "Frontend image not found or already deleted"
+
+    - name: Delete Terraform state from GCS
+      run: |
+        # Delete the Terraform state folder for this PR (ignore errors if bucket doesn't exist)
+        gsutil -m rm -r gs://${{ secrets.TF_STATE_BUCKET || vars.TF_STATE_BUCKET }}/terraform/state/pr-${{ github.event.pull_request.number }}/ \
+          || echo "Terraform state not found or already deleted"
 
     - name: Comment PR about cleanup
       uses: actions/github-script@v7

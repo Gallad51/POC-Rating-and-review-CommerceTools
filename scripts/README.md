@@ -4,6 +4,39 @@ Utility scripts for deployment, troubleshooting, and development.
 
 ## Available Scripts
 
+### `setup-terraform-state-bucket.sh`
+
+Interactive script to create and configure a GCS bucket for Terraform state storage.
+
+**Usage:**
+```bash
+./scripts/setup-terraform-state-bucket.sh [project_id]
+```
+
+**Parameters:**
+- `project_id` - (Optional) GCP Project ID. If not provided, will prompt for input.
+
+**What it does:**
+- ✅ Creates a GCS bucket for Terraform state
+- ✅ Enables versioning for state recovery
+- ✅ Sets uniform bucket-level access
+- ✅ Grants Storage Object Admin role to GitHub Actions service account
+- ✅ Provides instructions for GitHub configuration
+
+**Example:**
+```bash
+# Interactive mode
+./scripts/setup-terraform-state-bucket.sh
+
+# With project ID
+./scripts/setup-terraform-state-bucket.sh my-project-id
+```
+
+**After running:**
+1. Add the bucket name to GitHub as `TF_STATE_BUCKET` secret/variable
+2. Your workflows will automatically use this bucket for state storage
+3. Each PR gets isolated state: `gs://bucket/terraform/state/pr-{NUMBER}/`
+
 ### `troubleshoot.sh`
 
 Comprehensive troubleshooting script for CI/CD and Cloud Run deployment issues.
