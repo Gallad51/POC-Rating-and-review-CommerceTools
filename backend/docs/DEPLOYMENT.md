@@ -743,6 +743,42 @@ terraform destroy -target=google_cloud_run_service.backend_api
 terraform apply
 ```
 
+#### 7. PR Cleanup Workflow Doesn't Delete Services
+
+**Problem**: The PR cleanup workflow runs successfully after a PR is merged, but Cloud Run services are not deleted.
+
+**Root Cause**: 
+Terraform uses local state by default, which is not persisted between GitHub Actions workflow runs. When the cleanup workflow runs `terraform init`, it creates a new empty state, so `terraform destroy` has no knowledge of the resources that were created during preview deployment.
+
+**Solution**:
+This issue has been fixed by adding a fallback cleanup step that directly deletes Cloud Run services using `gcloud` commands. The cleanup workflow now:
+1. Attempts `terraform destroy` (in case state exists)
+2. Falls back to direct `gcloud run services delete` commands to ensure services are removed
+
+If you need to manually clean up services:
+```bash
+# List all Cloud Run services
+gcloud run services list --region=$REGION
+
+# Delete specific preview services
+gcloud run services delete SERVICE_NAME --region=$REGION --quiet
+
+# Example: Delete PR-specific services
+gcloud run services delete ratings-reviews-backend-pr-11-feature --region=europe-west1 --quiet
+gcloud run services delete ratings-reviews-frontend-pr-11-feature --region=europe-west1 --quiet
+```
+
+**Future Improvement**:
+For production environments, consider configuring a Terraform backend (e.g., GCS) to persist state:
+```hcl
+terraform {
+  backend "gcs" {
+    bucket = "your-terraform-state-bucket"
+    prefix = "terraform/state"
+  }
+}
+```
+
 ### Debug Checklist
 
 - [ ] Service account has all required roles

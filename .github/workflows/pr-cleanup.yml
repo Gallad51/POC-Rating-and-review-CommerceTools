@@ -79,7 +79,19 @@ jobs:
           -var="create_backend_secrets=false" \
           -var="enable_commercetools=false" \
           -var="backend_min_instances=0" \
-        || echo "Terraform destroy completed with warnings (services may not exist)"
+          || echo "Terraform destroy completed with warnings (services may not exist)"
+
+    - name: Delete Cloud Run services directly
+      run: |
+        # Delete backend service (ignore errors if service doesn't exist)
+        gcloud run services delete ${{ steps.env.outputs.backend_service }} \
+          --region=${{ env.REGION }} \
+          --quiet || echo "Backend service not found or already deleted"
+        
+        # Delete frontend service (ignore errors if service doesn't exist)
+        gcloud run services delete ${{ steps.env.outputs.frontend_service }} \
+          --region=${{ env.REGION }} \
+          --quiet || echo "Frontend service not found or already deleted"
 
     - name: Delete Docker images
       run: |
