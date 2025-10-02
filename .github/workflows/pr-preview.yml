@@ -126,9 +126,9 @@ jobs:
     - name: Terraform Plan
       env:
         TF_VAR_jwt_secret: ${{ secrets.TF_VAR_jwt_secret || 'mock-jwt-secret-for-preview-environment' }}
-        TF_VAR_ctp_project_key: ${{ secrets.TF_VAR_ctp_project_key || '' }}
-        TF_VAR_ctp_client_id: ${{ secrets.TF_VAR_ctp_client_id || '' }}
-        TF_VAR_ctp_client_secret: ${{ secrets.TF_VAR_ctp_client_secret || '' }}
+        TF_VAR_ctp_project_key: ${{ secrets.COMMERCETOOLS_PROJECT_KEY || '' }}
+        TF_VAR_ctp_client_id: ${{ secrets.COMMERCETOOLS_CLIENT_ID || '' }}
+        TF_VAR_ctp_client_secret: ${{ secrets.COMMERCETOOLS_CLIENT_SECRET || '' }}
         TF_VAR_backend_memory: ${{ vars.TF_VAR_backend_memory || '512Mi' }}
         TF_VAR_backend_cpu: ${{ vars.TF_VAR_backend_cpu || '1000m' }}
         TF_VAR_backend_max_instances: ${{ vars.TF_VAR_backend_max_instances || '10' }}
@@ -151,9 +151,9 @@ jobs:
     - name: Terraform Apply
       env:
         TF_VAR_jwt_secret: ${{ secrets.TF_VAR_jwt_secret || 'mock-jwt-secret-for-preview-environment' }}
-        TF_VAR_ctp_project_key: ${{ secrets.TF_VAR_ctp_project_key || '' }}
-        TF_VAR_ctp_client_id: ${{ secrets.TF_VAR_ctp_client_id || '' }}
-        TF_VAR_ctp_client_secret: ${{ secrets.TF_VAR_ctp_client_secret || '' }}
+        TF_VAR_ctp_project_key: ${{ secrets.COMMERCETOOLS_PROJECT_KEY || '' }}
+        TF_VAR_ctp_client_id: ${{ secrets.COMMERCETOOLS_CLIENT_ID || '' }}
+        TF_VAR_ctp_client_secret: ${{ secrets.COMMERCETOOLS_CLIENT_SECRET || '' }}
         TF_VAR_backend_memory: ${{ vars.TF_VAR_backend_memory || '512Mi' }}
         TF_VAR_backend_cpu: ${{ vars.TF_VAR_backend_cpu || '1000m' }}
         TF_VAR_backend_max_instances: ${{ vars.TF_VAR_backend_max_instances || '10' }}

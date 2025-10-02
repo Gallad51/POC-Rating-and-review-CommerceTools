@@ -18,14 +18,19 @@ This directory contains CI/CD workflows for the POC Rating and Review project.
 - Automatically scales to zero when idle
 
 **Environment Variables**:
-- Uses preview-specific configuration (mock mode for CommerceTools)
+- Uses preview-specific configuration (mock mode for CommerceTools by default)
 - Sets `enable_commercetools=false` for preview environments
 - Uses `create_backend_secrets=false` (no real secrets in preview)
+- Can optionally use real CommerceTools credentials if configured
 
 **CommerceTools Integration**:
-- Preview environments run in mock mode by default
-- No real CommerceTools credentials are used
-- Perfect for testing UI/UX changes without API costs
+- Preview environments run in mock mode by default (`enable_commercetools=false`)
+- If you want to test with real CommerceTools API in preview:
+  - Ensure `COMMERCETOOLS_PROJECT_KEY`, `COMMERCETOOLS_CLIENT_ID`, and `COMMERCETOOLS_CLIENT_SECRET` secrets are configured
+  - The workflow will pass them to Terraform as environment variables
+  - Set `enable_commercetools=true` in the Terraform plan command to activate
+- Perfect for testing UI/UX changes without API costs (mock mode)
+- Or test with real API integration when needed (real mode)
 
 ### 2. PR Preview Cleanup (`pr-cleanup.yml`)
 
@@ -85,6 +90,11 @@ To enable E2E testing with CommerceTools:
 | `COMMERCETOOLS_CLIENT_ID` | OAuth 2.0 Client ID from API client | `B9xT3kL7mN...` |
 | `COMMERCETOOLS_CLIENT_SECRET` | OAuth 2.0 Client Secret | `X4yU7vC2bN...` |
 
+**Note**: The workflows map these to Terraform variables:
+- `COMMERCETOOLS_PROJECT_KEY` → `TF_VAR_ctp_project_key`
+- `COMMERCETOOLS_CLIENT_ID` → `TF_VAR_ctp_client_id`
+- `COMMERCETOOLS_CLIENT_SECRET` → `TF_VAR_ctp_client_secret`
+
 ### Optional Secrets
 
 | Secret Name | Description | Default |
@@ -107,6 +117,9 @@ To enable E2E testing with CommerceTools:
 ### Preview Deployments
 ```
 PR Created/Updated → Build → Test → Deploy → Comment with URLs
+                                  ↓
+                    CommerceTools secrets passed to Terraform
+                    (defaults to empty for mock mode)
 PR Closed → Cleanup → Delete Resources → Comment Confirmation
 ```
 
