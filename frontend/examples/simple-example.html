@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Web Components Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .product-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        h1 {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Simple Product Page Example</h1>
+    
+    <div class="product-card">
+        <h2>Amazing Product</h2>
+        <p>Price: $99.99</p>
+        
+        <!-- Web Component: Rating Display -->
+        <rating-compact 
+            product-id="test-product-1"
+            auto-fetch="true"
+        ></rating-compact>
+        
+        <button onclick="scrollToReviews()">See Reviews</button>
+    </div>
+
+    <hr>
+
+    <!-- Web Component: Full Reviews List -->
+    <div id="reviews-section">
+        <reviews-list 
+            product-id="test-product-1"
+            page-size="10"
+        ></reviews-list>
+    </div>
+
+    <hr>
+
+    <!-- Web Component: Review Form Button -->
+    <review-form-button 
+        product-id="test-product-1"
+        button-text="Write Your Review"
+    ></review-form-button>
+
+    <!-- Load the Web Components - that's all you need! -->
+    <script type="module" src="../dist/ratings-reviews-components.es.js"></script>
+    
+    <script>
+        function scrollToReviews() {
+            document.getElementById('reviews-section').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
