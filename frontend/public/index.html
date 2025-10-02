@@ -3,185 +3,249 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ratings & Reviews - POC</title>
+    <title>Ratings & Reviews - Web Components Demo</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #f5f5f5;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
         }
         .container {
             background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
         }
         h1 {
             color: #333;
             text-align: center;
+            margin-bottom: 10px;
         }
-        .rating-form {
-            margin: 20px 0;
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+        }
+        .section {
+            margin: 30px 0;
             padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
             background: #f9f9f9;
         }
-        .rating-list {
+        .section h2 {
+            margin-top: 0;
+            color: #667eea;
+            font-size: 1.5rem;
+        }
+        .section p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
             margin: 20px 0;
         }
-        .rating-item {
-            padding: 15px;
-            margin: 10px 0;
-            border: 1px solid #eee;
-            border-radius: 4px;
+        .demo-card {
             background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
         }
-        .stars {
-            color: #ffc107;
-            font-size: 1.2em;
+        .demo-card h3 {
+            margin: 0 0 15px 0;
+            font-size: 1rem;
+            color: #666;
         }
-        input, textarea, button {
-            margin: 5px;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+        .config-section {
+            background: #f0f4ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
         }
-        button {
-            background: #007bff;
-            color: white;
-            cursor: pointer;
+        .config-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
         }
-        button:hover {
-            background: #0056b3;
+        .config-form label {
+            font-weight: 600;
+            color: #333;
         }
-        .status {
+        .config-form input {
+            flex: 1;
+            min-width: 200px;
             padding: 10px;
-            margin: 10px 0;
+            border: 2px solid #667eea;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        .config-form button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .config-form button:hover {
+            background: #5568d3;
+        }
+        .code-example {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.9rem;
+            margin: 15px 0;
+        }
+        .code-example code {
+            white-space: pre;
+        }
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 20px 0;
             border-radius: 4px;
         }
-        .error {
-            background: #f8d7da;
-            color: #721c24;
+        .info-box h4 {
+            margin: 0 0 10px 0;
+            color: #1976d2;
         }
-        .success {
-            background: #d4edda;
-            color: #155724;
+        .info-box p {
+            margin: 5px 0;
+            color: #333;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🌟 Ratings & Reviews POC</h1>
+        <h1>🌟 Ratings & Reviews - Web Components Demo</h1>
+        <p class="subtitle">HTML Web Components that work with any website - no framework required!</p>
         
-        <div id="status"></div>
-        
-        <div class="rating-form">
-            <h3>Add a Review</h3>
-            <form id="reviewForm">
-                <div>
-                    <input type="text" id="productId" placeholder="Product ID" required>
-                </div>
-                <div>
-                    <select id="rating" required>
-                        <option value="">Select Rating</option>
-                        <option value="1">⭐ 1 Star</option>
-                        <option value="2">⭐⭐ 2 Stars</option>
-                        <option value="3">⭐⭐⭐ 3 Stars</option>
-                        <option value="4">⭐⭐⭐⭐ 4 Stars</option>
-                        <option value="5">⭐⭐⭐⭐⭐ 5 Stars</option>
-                    </select>
-                </div>
-                <div>
-                    <textarea id="comment" placeholder="Write your review..." rows="3"></textarea>
-                </div>
-                <div>
-                    <input type="text" id="userId" placeholder="User ID" required>
-                </div>
-                <button type="submit">Submit Review</button>
-            </form>
+        <!-- Configuration Section -->
+        <div class="config-section">
+            <h2 style="margin-top: 0; color: #667eea;">⚙️ Configuration</h2>
+            <p style="color: #666;">Enter a Product ID to test with your CommerceTools data:</p>
+            <div class="config-form">
+                <label for="product-id-input">Product ID:</label>
+                <input 
+                    id="product-id-input" 
+                    type="text" 
+                    placeholder="e.g., test-product-1 or UUID"
+                    value="test-product-1"
+                />
+                <button onclick="updateProductId()">Update</button>
+            </div>
         </div>
-        
-        <div class="rating-list">
-            <h3>Reviews</h3>
-            <button onclick="loadReviews()">Load Reviews</button>
-            <div id="reviews"></div>
+
+        <!-- Info Box -->
+        <div class="info-box">
+            <h4>✨ What are Web Components?</h4>
+            <p>These are native HTML custom elements that work in any website, regardless of the framework you're using (React, Angular, vanilla HTML, etc.). No Vue.js required!</p>
+        </div>
+
+        <!-- Component 1: Rating Compact -->
+        <div class="section">
+            <h2>1. Rating Compact Component</h2>
+            <p>A compact rating display perfect for product lists and tiles.</p>
+            
+            <div class="demo-card">
+                <h3>Live Demo:</h3>
+                <rating-compact 
+                    id="rating-compact-demo"
+                    product-id="test-product-1"
+                    auto-fetch="true"
+                ></rating-compact>
+            </div>
+
+            <div class="code-example"><code>&lt;rating-compact 
+    product-id="test-product-1"
+    auto-fetch="true"
+&gt;&lt;/rating-compact&gt;</code></div>
+        </div>
+
+        <!-- Component 2: Reviews List -->
+        <div class="section">
+            <h2>2. Reviews List Component</h2>
+            <p>A full-featured reviews list with filtering, sorting, and pagination.</p>
+            
+            <div class="demo-card">
+                <h3>Live Demo:</h3>
+                <reviews-list 
+                    id="reviews-list-demo"
+                    product-id="test-product-1"
+                    page-size="5"
+                ></reviews-list>
+            </div>
+
+            <div class="code-example"><code>&lt;reviews-list 
+    product-id="test-product-1"
+    page-size="5"
+&gt;&lt;/reviews-list&gt;</code></div>
+        </div>
+
+        <!-- Component 3: Review Form Button -->
+        <div class="section">
+            <h2>3. Review Form Button Component</h2>
+            <p>A button that opens a modal form for submitting reviews.</p>
+            
+            <div class="demo-card">
+                <h3>Live Demo:</h3>
+                <review-form-button 
+                    id="review-form-demo"
+                    product-id="test-product-1"
+                    button-text="Write a Review"
+                ></review-form-button>
+            </div>
+
+            <div class="code-example"><code>&lt;review-form-button 
+    product-id="test-product-1"
+    button-text="Write a Review"
+&gt;&lt;/review-form-button&gt;</code></div>
+        </div>
+
+        <!-- Integration Instructions -->
+        <div class="section">
+            <h2>📦 How to Integrate Into Your Website</h2>
+            
+            <h3>Step 1: Include the JavaScript Bundle</h3>
+            <div class="code-example"><code>&lt;script type="module" src="path/to/ratings-reviews-components.es.js"&gt;&lt;/script&gt;</code></div>
+
+            <h3>Step 2: Use the Components in Your HTML</h3>
+            <div class="code-example"><code>&lt;!-- Anywhere in your HTML --&gt;
+&lt;rating-compact product-id="your-product-id"&gt;&lt;/rating-compact&gt;
+&lt;reviews-list product-id="your-product-id"&gt;&lt;/reviews-list&gt;
+&lt;review-form-button product-id="your-product-id"&gt;&lt;/review-form-button&gt;</code></div>
+
+            <h3>That's it! 🎉</h3>
+            <p>No Vue.js installation needed. No build step required. Just include the script and use the HTML tags.</p>
         </div>
     </div>
 
-    <script>
-        const API_BASE = window.location.hostname === 'localhost' 
-            ? 'http://localhost:8080' 
-            : 'https://YOUR_BACKEND_URL';
-        
-        function showStatus(message, isError = false) {
-            const status = document.getElementById('status');
-            status.innerHTML = `<div class="status ${isError ? 'error' : 'success'}">${message}</div>`;
-            setTimeout(() => status.innerHTML = '', 5000);
-        }
+    <!-- Load the Web Components -->
+    <script type="module">
+        // Load the web components bundle
+        import './ratings-reviews-components.es.js';
 
-        function renderStars(rating) {
-            return '⭐'.repeat(Math.floor(rating));
-        }
-
-        async function loadReviews() {
-            try {
-                const response = await fetch(`${API_BASE}/api/ratings`);
-                const data = await response.json();
-                
-                const reviewsHtml = data.ratings.map(review => `
-                    <div class="rating-item">
-                        <div><strong>Product:</strong> ${review.productId}</div>
-                        <div class="stars">${renderStars(review.rating)} (${review.rating})</div>
-                        <div><strong>Comment:</strong> ${review.comment}</div>
-                        <div><small>By: ${review.userId}</small></div>
-                    </div>
-                `).join('');
-                
-                document.getElementById('reviews').innerHTML = reviewsHtml;
-                showStatus(`Loaded ${data.total} reviews. Average rating: ${data.averageRating}`);
-            } catch (error) {
-                showStatus(`Error loading reviews: ${error.message}`, true);
-            }
-        }
-
-        document.getElementById('reviewForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = {
-                productId: document.getElementById('productId').value,
-                rating: parseFloat(document.getElementById('rating').value),
-                comment: document.getElementById('comment').value,
-                userId: document.getElementById('userId').value
-            };
-            
-            try {
-                const response = await fetch(`${API_BASE}/api/ratings`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
-                
-                if (response.ok) {
-                    const result = await response.json();
-                    showStatus('Review submitted successfully!');
-                    document.getElementById('reviewForm').reset();
-                    loadReviews();
-                } else {
-                    const error = await response.json();
-                    showStatus(`Error: ${error.error}`, true);
-                }
-            } catch (error) {
-                showStatus(`Error submitting review: ${error.message}`, true);
-            }
-        });
-
-        // Load reviews on page load
-        loadReviews();
+        // Function to update all component product IDs
+        window.updateProductId = function() {
+            const productId = document.getElementById('product-id-input').value;
+            document.getElementById('rating-compact-demo').setAttribute('product-id', productId);
+            document.getElementById('reviews-list-demo').setAttribute('product-id', productId);
+            document.getElementById('review-form-demo').setAttribute('product-id', productId);
+        };
     </script>
 </body>
 </html>

@@ -3,24 +3,26 @@
   "version": "1.0.0",
   "description": "Frontend for ratings and reviews microservice - Vue.js components",
   "type": "module",
-  "main": "./dist/ratings-reviews.umd.js",
-  "module": "./dist/ratings-reviews.es.js",
-  "types": "./dist/main.d.ts",
+  "main": "./dist/ratings-reviews-components.umd.js",
+  "module": "./dist/ratings-reviews-components.es.js",
+  "types": "./dist/custom-elements.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/ratings-reviews.es.js",
-      "require": "./dist/ratings-reviews.umd.js",
-      "types": "./dist/main.d.ts"
-    }
+      "types": "./dist/custom-elements.d.ts",
+      "import": "./dist/ratings-reviews-components.es.js",
+      "require": "./dist/ratings-reviews-components.umd.js"
+    },
+    "./style.css": "./dist/ratings-reviews-components.css"
   },
   "files": [
     "dist"
   ],
   "scripts": {
     "dev": "vite",
-    "build": "vite build --config vite.config.demo.ts",
+    "build": "npm run build:components && npm run build:demo",
     "build:lib": "vite build",
-    "build:demo": "vite build --config vite.config.demo.ts",
+    "build:components": "vite build --config vite.config.webcomponents.ts",
+    "build:demo": "cp public/index.html dist/index.html",
     "build:static": "echo 'Building static assets...' && mkdir -p dist && cp -r public/* dist/",
     "preview": "vite preview",
     "start": "node server.js",
