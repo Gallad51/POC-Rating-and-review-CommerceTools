@@ -38,6 +38,21 @@ locals {
         name  = "CTP_SCOPES"
         value = var.ctp_scopes
       }
+    ] : [],
+    # Pass CommerceTools credentials as plain env vars when not using Secret Manager
+    var.enable_commercetools && !var.create_backend_secrets ? [
+      {
+        name  = "CTP_PROJECT_KEY"
+        value = var.ctp_project_key
+      },
+      {
+        name  = "CTP_CLIENT_ID"
+        value = var.ctp_client_id
+      },
+      {
+        name  = "CTP_CLIENT_SECRET"
+        value = var.ctp_client_secret
+      }
     ] : []
   )
 }
