@@ -18,19 +18,16 @@ This directory contains CI/CD workflows for the POC Rating and Review project.
 - Automatically scales to zero when idle
 
 **Environment Variables**:
-- Uses preview-specific configuration (mock mode for CommerceTools by default)
-- Sets `enable_commercetools=false` for preview environments
-- Uses `create_backend_secrets=false` (no real secrets in preview)
-- Can optionally use real CommerceTools credentials if configured
+- Uses CommerceTools integration enabled by default (`enable_commercetools=true`)
+- Passes all CommerceTools secrets to Terraform including API URL, Auth URL, and scopes
+- Sets `create_backend_secrets=false` (secrets managed via environment variables)
+- All CommerceTools configuration variables are passed with sensible defaults
 
 **CommerceTools Integration**:
-- Preview environments run in mock mode by default (`enable_commercetools=false`)
-- If you want to test with real CommerceTools API in preview:
-  - Ensure `COMMERCETOOLS_PROJECT_KEY`, `COMMERCETOOLS_CLIENT_ID`, and `COMMERCETOOLS_CLIENT_SECRET` secrets are configured
-  - The workflow will pass them to Terraform as environment variables
-  - Set `enable_commercetools=true` in the Terraform plan command to activate
-- Perfect for testing UI/UX changes without API costs (mock mode)
-- Or test with real API integration when needed (real mode)
+- Preview environments now use **real CommerceTools API** by default
+- All secrets properly passed: `PROJECT_KEY`, `CLIENT_ID`, `CLIENT_SECRET`, `API_URL`, `AUTH_URL`, `SCOPES`
+- Falls back to default values if optional secrets (API_URL, AUTH_URL, SCOPES) are not configured
+- Perfect for testing the full integration in preview environments
 
 ### 2. PR Preview Cleanup (`pr-cleanup.yml`)
 
@@ -164,7 +161,7 @@ This is useful for:
 
 | Environment | CommerceTools Mode | Secrets Used | Use Case |
 |-------------|-------------------|--------------|----------|
-| **Preview (PR)** | Mock | None (defaults) | UI/UX testing |
+| **Preview (PR)** | Real API (enabled) | All CT secrets + defaults | Full integration testing |
 | **E2E Tests** | Real API | Repository secrets | Integration testing |
 | **Production** | Real API | Secret Manager | Live deployment |
 
