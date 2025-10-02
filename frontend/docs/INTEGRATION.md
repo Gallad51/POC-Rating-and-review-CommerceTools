@@ -1,311 +1,345 @@
-# Integration Guide - Vue.js Ratings & Reviews Components
+# Integration Guide - Web Components for Ratings & Reviews
 
 ## 🎯 Overview
 
-This guide provides comprehensive instructions for integrating the Vue.js Ratings & Reviews components into your application.
+This guide provides comprehensive instructions for integrating the **native Web Components** for Ratings & Reviews into any website. These components work with **any framework or plain HTML** - no Vue.js required!
 
 ## 📦 Installation Methods
 
-### Method 1: NPM Package (Recommended)
+### Method 1: Direct Download (Recommended for Most Use Cases)
+
+1. Download the `ratings-reviews-components.es.js` (or `.umd.js` or `.iife.js`) from the releases
+2. Place it in your website's static assets directory
+3. Include it in your HTML
+
+```html
+<script type="module" src="/path/to/ratings-reviews-components.es.js"></script>
+```
+
+### Method 2: NPM Package
 
 ```bash
 npm install ratings-reviews-frontend
 ```
 
-### Method 2: Local Development
+Then import in your JavaScript:
 
-```bash
-cd frontend
-npm install
-npm run dev
+```javascript
+import 'ratings-reviews-frontend';
+// Or specify the exact file:
+import 'ratings-reviews-frontend/dist/ratings-reviews-components.es.js';
 ```
 
 ### Method 3: CDN (Browser)
 
 ```html
-<link rel="stylesheet" href="https://unpkg.com/ratings-reviews-frontend/dist/ratings-reviews-frontend.css">
-<script type="module">
-  import { RatingCompact } from 'https://unpkg.com/ratings-reviews-frontend/dist/ratings-reviews.es.js';
-  // Use components
-</script>
+<script type="module" src="https://unpkg.com/ratings-reviews-frontend/dist/ratings-reviews-components.es.js"></script>
 ```
 
 ## 🚀 Quick Integration Examples
 
-### Example 1: Product List Page (PLP)
+### Example 1: Plain HTML Website
 
-Display compact ratings on product tiles:
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Product Page</title>
+</head>
+<body>
+  <h1>Amazing Product</h1>
+  
+  <!-- Rating display -->
+  <rating-compact 
+    product-id="prod-123"
+    auto-fetch="true"
+  ></rating-compact>
+  
+  <!-- Reviews list -->
+  <reviews-list 
+    product-id="prod-123"
+    page-size="10"
+  ></reviews-list>
+  
+  <!-- Write review button -->
+  <review-form-button 
+    product-id="prod-123"
+    button-text="Write a Review"
+  ></review-form-button>
 
-```vue
-<template>
-  <div class="product-grid">
-    <div v-for="product in products" :key="product.id" class="product-card">
-      <img :src="product.image" :alt="product.name" />
-      <h3>{{ product.name }}</h3>
-      <p>{{ product.price }}</p>
-      
-      <!-- Compact rating display -->
-      <RatingCompact
-        :product-id="product.id"
-        :average-rating="product.rating"
-        :total-reviews="product.reviewCount"
-      />
-    </div>
-  </div>
-</template>
-
-<script setup>
-import { RatingCompact } from 'ratings-reviews-frontend';
-
-const products = ref([
-  { id: 'prod-1', name: 'Product 1', price: '$99', rating: 4.5, reviewCount: 42 },
-  // ... more products
-]);
-</script>
+  <!-- Load the Web Components -->
+  <script type="module" src="/js/ratings-reviews-components.es.js"></script>
+</body>
+</html>
 ```
 
-### Example 2: Product Detail Page (PDP)
+### Example 2: React Integration
 
-Full reviews display with rating summary:
+Web Components work seamlessly in React:
+
+```jsx
+import React from 'react';
+
+export function ProductPage({ productId }) {
+  return (
+    <div>
+      <h1>Product Details</h1>
+      
+      {/* Use Web Components directly in JSX */}
+      <rating-compact 
+        product-id={productId}
+        auto-fetch="true"
+      />
+      
+      <reviews-list 
+        product-id={productId}
+        page-size={10}
+      />
+      
+      <review-form-button 
+        product-id={productId}
+        button-text="Add Your Review"
+      />
+    </div>
+  );
+}
+```
+
+Note: Make sure to import the Web Components in your main entry file:
+
+```javascript
+// index.js or App.js
+import 'ratings-reviews-frontend/dist/ratings-reviews-components.es.js';
+```
+
+### Example 3: Angular Integration
+
+```typescript
+// app.module.ts
+import { CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
+import 'ratings-reviews-frontend/dist/ratings-reviews-components.es.js';
+
+@NgModule({
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  // ... other config
+})
+export class AppModule { }
+```
+
+```html
+<!-- product.component.html -->
+<div>
+  <h1>Product Details</h1>
+  
+  <rating-compact 
+    [attr.product-id]="productId"
+    auto-fetch="true">
+  </rating-compact>
+  
+  <reviews-list 
+    [attr.product-id]="productId"
+    [attr.page-size]="10">
+  </reviews-list>
+  
+  <review-form-button 
+    [attr.product-id]="productId"
+    button-text="Write Review">
+  </review-form-button>
+</div>
+```
+
+### Example 4: Vue.js Integration
 
 ```vue
 <template>
-  <div class="product-detail">
-    <div class="product-info">
-      <h1>{{ product.name }}</h1>
-      <p>{{ product.description }}</p>
-      <button @click="addToCart">Add to Cart</button>
-    </div>
-
-    <!-- Compact rating in header -->
-    <RatingCompact
-      :product-id="product.id"
-      :average-rating="product.rating"
-      :total-reviews="product.reviewCount"
+  <div>
+    <h1>Product Details</h1>
+    
+    <rating-compact 
+      :product-id="productId"
+      auto-fetch="true"
     />
-
-    <!-- Full reviews section -->
-    <section id="reviews">
-      <ReviewsList
-        :product-id="product.id"
-        :page-size="10"
-        :show-summary="true"
-        @reviews-loaded="handleReviewsLoaded"
-      />
-    </section>
-
-    <!-- Review form button -->
-    <ReviewFormButton
-      :product-id="product.id"
-      :auth-token="userToken"
-      @submitted="handleReviewSubmitted"
+    
+    <reviews-list 
+      :product-id="productId"
+      :page-size="10"
+    />
+    
+    <review-form-button 
+      :product-id="productId"
+      button-text="Write Review"
     />
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue';
-import { RatingCompact, ReviewsList, ReviewFormButton } from 'ratings-reviews-frontend';
 
-const product = ref({
-  id: 'prod-123',
-  name: 'Amazing Product',
-  rating: 4.5,
-  reviewCount: 42,
-});
+// Import Web Components in main.ts or App.vue
+import 'ratings-reviews-frontend/dist/ratings-reviews-components.es.js';
 
-const userToken = ref('user-jwt-token');
-
-const handleReviewsLoaded = (reviews) => {
-  console.log(`Loaded ${reviews.length} reviews`);
-};
-
-const handleReviewSubmitted = (reviewId) => {
-  console.log('Review submitted:', reviewId);
-  // Refresh reviews list
-};
+const productId = ref('prod-123');
 </script>
 ```
 
-### Example 3: Vue 3 Composition API
+## 📋 Component Reference
 
-Using composables for direct API access:
+### `<rating-compact>` Component
 
-```vue
-<script setup>
-import { ref, onMounted } from 'vue';
-import { useReviewsApi } from 'ratings-reviews-frontend';
+Compact rating display perfect for product lists and tiles.
 
-const productId = 'prod-123';
-const { loading, error, getProductRating, getProductReviews } = useReviewsApi();
+**Attributes:**
 
-const rating = ref(null);
-const reviews = ref([]);
+| Attribute | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `product-id` | String | Yes | - | Product identifier |
+| `auto-fetch` | String | No | `"false"` | Automatically fetch rating from API |
+| `average-rating` | String | No | - | Pre-set average rating (0-5) |
+| `total-reviews` | String | No | - | Pre-set total review count |
+| `empty-text` | String | No | `"No reviews yet"` | Text shown when no reviews |
+| `compact` | String | No | `"false"` | Show minimal version |
 
-onMounted(async () => {
-  // Fetch rating
-  rating.value = await getProductRating(productId);
-  
-  // Fetch reviews
-  const result = await getProductReviews(productId, 1, 10);
-  if (result) {
-    reviews.value = result.reviews;
-  }
-});
-</script>
-
-<template>
-  <div>
-    <div v-if="loading === 'loading'">Loading...</div>
-    <div v-else-if="error">{{ error }}</div>
-    <div v-else>
-      <p>Rating: {{ rating?.averageRating }} / 5</p>
-      <ul>
-        <li v-for="review in reviews" :key="review.id">
-          {{ review.comment }}
-        </li>
-      </ul>
-    </div>
-  </div>
-</template>
-```
-
-## 🌐 Web Components Integration
-
-For use in non-Vue applications:
-
-### Step 1: Convert to Web Components
-
-```typescript
-// custom-elements.ts
-import { defineCustomElement } from 'vue';
-import RatingCompact from './components/RatingCompact.vue';
-import ReviewsList from './components/ReviewsList.vue';
-import ReviewFormButton from './components/ReviewFormButton.vue';
-
-// Define custom elements
-const RatingCompactElement = defineCustomElement(RatingCompact);
-const ReviewsListElement = defineCustomElement(ReviewsList);
-const ReviewFormButtonElement = defineCustomElement(ReviewFormButton);
-
-// Register custom elements
-customElements.define('rating-compact', RatingCompactElement);
-customElements.define('reviews-list', ReviewsListElement);
-customElements.define('review-form-button', ReviewFormButtonElement);
-```
-
-### Step 2: Use in HTML
+**Example:**
 
 ```html
-<!DOCTYPE html>
-<html>
-<head>
-  <link rel="stylesheet" href="/dist/ratings-reviews-frontend.css">
-</head>
-<body>
-  <!-- Use as web components -->
-  <rating-compact
-    product-id="prod-123"
-    average-rating="4.5"
-    total-reviews="42"
-  ></rating-compact>
+<!-- Fetch from API -->
+<rating-compact 
+  product-id="prod-123"
+  auto-fetch="true"
+></rating-compact>
 
-  <reviews-list
-    product-id="prod-123"
-    page-size="10"
-  ></reviews-list>
-
-  <review-form-button
-    product-id="prod-123"
-  ></review-form-button>
-
-  <script type="module" src="/dist/custom-elements.js"></script>
-</body>
-</html>
+<!-- With preset values -->
+<rating-compact 
+  product-id="prod-123"
+  average-rating="4.5"
+  total-reviews="42"
+></rating-compact>
 ```
 
-### Step 3: React Integration
+### `<reviews-list>` Component
 
-```jsx
-import { useEffect, useRef } from 'react';
+Full reviews display with filtering, sorting, and pagination.
 
-function ProductRating({ productId, rating, reviewCount }) {
-  const ref = useRef(null);
+**Attributes:**
 
-  useEffect(() => {
-    if (ref.current) {
-      ref.current.productId = productId;
-      ref.current.averageRating = rating;
-      ref.current.totalReviews = reviewCount;
-    }
-  }, [productId, rating, reviewCount]);
+| Attribute | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `product-id` | String | Yes | - | Product identifier |
+| `page-size` | String | No | `"10"` | Reviews per page |
+| `sort-by` | String | No | `"newest"` | Default sort: `newest`, `helpful`, `highest`, `lowest` |
 
-  return <rating-compact ref={ref}></rating-compact>;
-}
+**Example:**
+
+```html
+<reviews-list 
+  product-id="prod-123"
+  page-size="5"
+  sort-by="helpful"
+></reviews-list>
+```
+
+### `<review-form-button>` Component
+
+Button that opens a modal form for submitting reviews.
+
+**Attributes:**
+
+| Attribute | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `product-id` | String | Yes | - | Product identifier |
+| `button-text` | String | No | `"Write a Review"` | Button label text |
+| `user-token` | String | No | - | Authentication token |
+
+**Example:**
+
+```html
+<review-form-button 
+  product-id="prod-123"
+  button-text="Share Your Experience"
+></review-form-button>
 ```
 
 ## 🎨 Styling and Theming
 
-### Custom CSS Variables
+Web Components use Shadow DOM, which encapsulates styles. However, you can still customize the appearance using CSS custom properties (CSS variables).
+
+### Available CSS Variables
+
+The components expose these CSS variables that you can override:
 
 ```css
-:root {
-  /* Colors */
+rating-compact {
   --rating-star-color: #ffc107;
-  --rating-star-empty: #e0e0e0;
+  --rating-star-empty-color: #e0e0e0;
   --rating-text-color: #333;
-  --rating-bg-color: #fff;
-  
-  /* Spacing */
-  --rating-gap: 0.5rem;
-  --rating-padding: 1rem;
-  
-  /* Typography */
-  --rating-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --rating-font-size: 1rem;
+  --rating-count-color: #666;
+}
+
+reviews-list {
+  --reviews-primary-color: #667eea;
+  --reviews-text-color: #333;
+  --reviews-border-color: #e0e0e0;
+  --reviews-star-color: #ffc107;
+}
+
+review-form-button {
+  --button-bg-color: #667eea;
+  --button-text-color: white;
+  --button-hover-bg: #5568d3;
 }
 ```
 
-### Component-Specific Styling
+### Example Customization
 
-```css
-/* Override RatingCompact styles */
-.rating-compact {
-  --star-color: #ff9800;
-  font-size: 0.875rem;
-}
+```html
+<style>
+  rating-compact {
+    --rating-star-color: #ff6b6b;
+    --rating-text-color: #2d3748;
+  }
+  
+  review-form-button {
+    --button-bg-color: #48bb78;
+    --button-hover-bg: #38a169;
+  }
+</style>
 
-/* Override ReviewsList styles */
-.reviews-list {
-  --primary-color: #2196f3;
-  --border-radius: 12px;
-}
-
-/* Override ReviewFormButton styles */
-.review-form-button {
-  --button-bg: #4caf50;
-  --button-text: #fff;
-}
+<rating-compact product-id="prod-123"></rating-compact>
+<review-form-button product-id="prod-123"></review-form-button>
 ```
 
 ## 🔌 API Configuration
 
 ### Environment Variables
 
-Create a `.env` file:
+The components automatically connect to the backend API. Configure the API endpoint:
 
-```env
+**For Development:**
+```bash
+# .env file
+VITE_API_BASE_URL=http://localhost:8080
+```
+
+**For Production:**
+
+Set the environment variable on your hosting platform:
+```bash
 VITE_API_BASE_URL=https://your-api.example.com
 ```
 
-### Runtime Configuration
+### CORS Configuration
 
-```typescript
-// Configure API base URL at runtime
-import { useReviewsApi } from 'ratings-reviews-frontend';
+Ensure your backend API has CORS enabled for the domains where you'll use the Web Components:
 
-const api = useReviewsApi();
-// API calls will use the configured base URL
+```javascript
+// Backend CORS config example
+app.use(cors({
+  origin: [
+    'https://your-website.com',
+    'http://localhost:5173'
+  ]
+}));
 ```
 
 ## 📡 Backend API Integration

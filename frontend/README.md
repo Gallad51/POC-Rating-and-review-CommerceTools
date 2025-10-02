@@ -1,67 +1,109 @@
-# Vue.js Components Documentation
+# Web Components for Ratings & Reviews
 
-## 📦 Ratings & Reviews Microfrontend Components
+## 📦 Native HTML Web Components - No Framework Required!
 
-This package provides Vue.js 3 components for displaying and managing product ratings and reviews. Built with TypeScript, fully accessible, and optimized for microfrontend architecture.
+This package provides **native HTML Web Components** for displaying and managing product ratings and reviews. These components work in **any website** regardless of the framework you're using (React, Angular, Vue, vanilla HTML, etc.). Built with TypeScript, fully accessible, and optimized for microfrontend architecture.
+
+## ✨ Why Web Components?
+
+- **Framework-agnostic**: Works with any JavaScript framework or plain HTML
+- **No dependencies**: No need to install Vue.js or any other framework
+- **Easy integration**: Just include the script and use HTML tags
+- **Encapsulated**: Styles and behavior are isolated using Shadow DOM
+- **Native browser support**: Uses standard Web Components APIs
 
 ## 🚀 Quick Start
 
-### Installation
+### Step 1: Include the Script
 
-```bash
-npm install ratings-reviews-frontend
+Add this to your HTML page:
+
+```html
+<script type="module" src="path/to/ratings-reviews-components.es.js"></script>
 ```
 
-### Basic Usage
+Or via CDN (if published):
 
-```vue
-<script setup>
-import { RatingCompact, ReviewsList, ReviewFormButton } from 'ratings-reviews-frontend';
-</script>
-
-<template>
-  <div>
-    <!-- Compact rating display for product tiles -->
-    <RatingCompact
-      product-id="prod-123"
-      :average-rating="4.5"
-      :total-reviews="42"
-    />
-
-    <!-- Full reviews list for product detail page -->
-    <ReviewsList
-      product-id="prod-123"
-      :page-size="10"
-    />
-
-    <!-- Review submission button with modal form -->
-    <ReviewFormButton
-      product-id="prod-123"
-      @submitted="handleReviewSubmitted"
-    />
-  </div>
-</template>
+```html
+<script type="module" src="https://unpkg.com/ratings-reviews-frontend/dist/ratings-reviews-components.es.js"></script>
 ```
+
+### Step 2: Use the Components in Your HTML
+
+```html
+<!DOCTYPE html>
+<html>
+<body>
+  <!-- Compact rating display for product tiles -->
+  <rating-compact
+    product-id="prod-123"
+    auto-fetch="true"
+  ></rating-compact>
+
+  <!-- Full reviews list for product detail page -->
+  <reviews-list
+    product-id="prod-123"
+    page-size="10"
+  ></reviews-list>
+
+  <!-- Review submission button with modal form -->
+  <review-form-button
+    product-id="prod-123"
+    button-text="Write a Review"
+  ></review-form-button>
+
+  <script type="module" src="path/to/ratings-reviews-components.es.js"></script>
+</body>
+</html>
+```
+
+That's it! No build step, no framework installation, no complex setup.
 
 ## 📚 Components
 
-### 1. RatingCompact
+### 1. `<rating-compact>`
 
 Compact rating display suitable for product tiles in PLP (Product List Page).
 
-[View full component documentation](#ratingcompact-component)
+**Attributes:**
+- `product-id` - Product identifier (required)
+- `auto-fetch` - Automatically fetch rating data from API
+- `average-rating` - Pre-set average rating (0-5)
+- `total-reviews` - Pre-set total review count
+- `empty-text` - Custom text for no reviews state
 
-### 2. ReviewsList
+**Example:**
+```html
+<rating-compact product-id="prod-123" auto-fetch="true"></rating-compact>
+```
+
+### 2. `<reviews-list>`
 
 Complete reviews display with rating summary, filters, sorting, and pagination for PDP.
 
-[View full component documentation](#reviewslist-component)
+**Attributes:**
+- `product-id` - Product identifier (required)
+- `page-size` - Number of reviews per page (default: 10)
+- `sort-by` - Default sort order (newest, helpful, highest, lowest)
 
-### 3. ReviewFormButton
+**Example:**
+```html
+<reviews-list product-id="prod-123" page-size="5"></reviews-list>
+```
+
+### 3. `<review-form-button>`
 
 Button that opens a modal form for submitting new reviews with GDPR compliance.
 
-[View full component documentation](#reviewformbutton-component)
+**Attributes:**
+- `product-id` - Product identifier (required)
+- `button-text` - Custom button text (default: "Write a Review")
+- `user-token` - Authentication token for user (if required)
+
+**Example:**
+```html
+<review-form-button product-id="prod-123" button-text="Add Review"></review-form-button>
+```
 
 ## 🔧 Development
 
@@ -75,7 +117,7 @@ Opens interactive demo at `http://localhost:5173`
 
 ### Build
 
-#### For Docker/Production (Demo App)
+#### For Production (Web Components)
 ```bash
 npm run build
 ```
@@ -106,11 +148,18 @@ The demo server proxies API requests to the backend service:
 ```
 Builds the Vue.js demo application to `dist/` directory.
 
-#### For NPM Package (Library Mode)
+Builds the Web Components bundle to `dist/` directory.
+
+**Output files:**
+- `ratings-reviews-components.es.js` - ES module format
+- `ratings-reviews-components.umd.js` - UMD format (for older browsers)
+- `ratings-reviews-components.iife.js` - IIFE format (can be loaded with script tag)
+
+#### For Legacy Vue.js Library Mode
 ```bash
 npm run build:lib
 ```
-Builds the components as a library (ES/UMD modules).
+Builds the original Vue.js components as a library (for Vue.js projects).
 
 ### Run Tests
 
@@ -125,13 +174,67 @@ For production deployment, the frontend server proxies API requests to the backe
 - `BACKEND_URL` - Backend service URL (default: `http://localhost:8080`)
 - `PORT` - Server port (default: `8080`)
 
+## 🌐 Live Demo
+
+After building:
+
+```bash
+npm run build
+npm start
+```
+
+Then visit `http://localhost:8080` to see the Web Components demo.
+
+## 🔌 Integration Examples
+
+### In Plain HTML
+
+```html
+<!DOCTYPE html>
+<html>
+<body>
+  <rating-compact product-id="prod-123"></rating-compact>
+  <script type="module" src="./ratings-reviews-components.es.js"></script>
+</body>
+</html>
+```
+
+### In React
+
+```jsx
+export function ProductRating({ productId }) {
+  return (
+    <rating-compact 
+      product-id={productId}
+      auto-fetch="true"
+    />
+  );
+}
+```
+
+### In Angular
+
+```html
+<rating-compact 
+  [attr.product-id]="productId"
+  auto-fetch="true">
+</rating-compact>
+```
+
+### In Vue.js
+
+```vue
+<template>
+  <rating-compact 
+    :product-id="productId"
+    auto-fetch="true"
+  />
+</template>
+```
+
 ## 📖 Full Documentation
 
-See [COMPONENTS.md](./docs/COMPONENTS.md) for complete component API documentation.
-
-## 🌐 Demo
-
-Access the live demo application at: `http://localhost:5173` (after running `npm run dev`)
+See [INTEGRATION.md](./docs/INTEGRATION.md) for complete integration guide and component API documentation.
 
 ## 📝 License
 
