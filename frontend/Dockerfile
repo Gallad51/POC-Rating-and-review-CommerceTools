@@ -1,5 +1,5 @@
 # Use official Node.js runtime as the base image
-FROM node:18-alpine
+FROM node:20-alpine AS builder
 
 # Set the working directory
 WORKDIR /app
@@ -7,15 +7,31 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install all dependencies (needed for build)
+RUN npm ci
 
 # Copy source files
-COPY server.js ./
-COPY public ./public
+COPY . .
 
-# Build static assets
+# Accept build-time argument for backend URL
+ARG VITE_API_BASE_URL
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+
+# Build the Vue.js demo application
 RUN npm run build
+
+# Production stage
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package files and install only production dependencies
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Copy built assets and server from builder
+COPY --from=builder /app/dist ./dist
+COPY server.js ./
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
