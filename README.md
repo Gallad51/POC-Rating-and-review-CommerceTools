@@ -19,6 +19,7 @@ This POC uses a **monorepo structure** with the following components:
 
 - **Backend**: Node.js 18 + TypeScript + Express
 - **Frontend**: Vanilla HTML/CSS/JS (static serving)
+- **Integration**: CommerceTools API (with mock mode for POC)
 - **Infrastructure**: Google Cloud Run (backend & frontend)
 - **CI/CD**: GitHub Actions
 - **IaC**: Terraform
@@ -51,14 +52,24 @@ This POC uses a **monorepo structure** with the following components:
    cd POC-Rating-and-review-CommerceTools
    ```
 
-2. **Backend development**:
+2. **Configure CommerceTools (Optional)**:
+   
+   By default, the application uses mock data. To integrate with CommerceTools:
+   - See **[CommerceTools Setup Guide](docs/COMMERCETOOLS_SETUP.md)** for detailed instructions
+   - Quick setup:
+     ```bash
+     cp .env.example .env
+     # Edit .env with your CommerceTools credentials
+     ```
+
+3. **Backend development**:
    ```bash
    cd backend
    npm install
    npm run dev  # Starts on http://localhost:8080
    ```
 
-3. **Frontend development**:
+4. **Frontend development**:
    ```bash
    cd frontend
    npm install
@@ -147,12 +158,37 @@ POC-Rating-and-review-CommerceTools/
 
 ## 🔧 Configuration
 
+### CommerceTools Integration
+
+This project integrates with CommerceTools for product ratings and reviews management.
+
+📖 **[Complete CommerceTools Setup Guide](docs/COMMERCETOOLS_SETUP.md)**
+
+The guide covers:
+- Getting a free CommerceTools trial account
+- Creating API credentials
+- Configuring environment variables
+- Testing the integration
+- Troubleshooting common issues
+
+**Quick Reference**:
+```bash
+# Required environment variables (see docs/COMMERCETOOLS_SETUP.md)
+CTP_PROJECT_KEY=your-project-key
+CTP_CLIENT_ID=your-client-id
+CTP_CLIENT_SECRET=your-client-secret
+```
+
 ### Environment Variables
 
 #### Backend Service
 - `PORT`: Server port (default: 8080)
 - `NODE_ENV`: Environment (dev/preview/prod)
-- `API_KEY`: External API key (from Secret Manager)
+- `CTP_PROJECT_KEY`: CommerceTools project key (required for production)
+- `CTP_CLIENT_ID`: CommerceTools client ID (required for production)
+- `CTP_CLIENT_SECRET`: CommerceTools client secret (required for production)
+
+See [.env.example](.env.example) and [docs/COMMERCETOOLS_SETUP.md](docs/COMMERCETOOLS_SETUP.md) for complete configuration details.
 
 #### Frontend Service  
 - `PORT`: Server port (default: 8080)
@@ -169,7 +205,20 @@ Required secrets for CI/CD:
 | `GCP_PROJECT_ID` | Google Cloud Project ID | ✅ Yes |
 | `TF_STATE_BUCKET` | GCS bucket for Terraform state | ✅ Yes |
 
-For complete setup instructions, see [backend/docs/GITHUB_ACTIONS_VARIABLES.md](backend/docs/GITHUB_ACTIONS_VARIABLES.md).
+Optional secrets for CommerceTools integration:
+
+| Secret | Description | Required |
+|--------|-------------|----------|
+| `COMMERCETOOLS_PROJECT_KEY` | CommerceTools project key | Optional* |
+| `COMMERCETOOLS_CLIENT_ID` | CommerceTools client ID | Optional* |
+| `COMMERCETOOLS_CLIENT_SECRET` | CommerceTools client secret | Optional* |
+
+*Required for E2E tests with real CommerceTools API. See [E2E Testing Workflow](#e2e-testing-workflow) below.
+
+For complete setup instructions, see:
+- [backend/docs/GITHUB_ACTIONS_VARIABLES.md](backend/docs/GITHUB_ACTIONS_VARIABLES.md)
+- [docs/COMMERCETOOLS_SETUP.md](docs/COMMERCETOOLS_SETUP.md)
+- [.github/workflows/README.md](.github/workflows/README.md) - CI/CD workflows documentation
 
 ## 🧪 Testing
 
@@ -182,8 +231,39 @@ Both services include health check endpoints:
 ### API Testing
 
 Backend API endpoints:
-- `GET /api/ratings` - List ratings
-- `POST /api/ratings` - Create rating
+- `GET /api/products/:productId/rating` - Get product rating
+- `GET /api/products/:productId/reviews` - Get product reviews
+- `POST /api/products/:productId/reviews` - Create review
+
+### E2E Testing Workflow
+
+The repository includes automated E2E testing with CommerceTools API integration:
+
+**Workflow**: `.github/workflows/e2e-tests.yml`
+
+**Triggers**:
+- Automatically on every pull request
+- On push to main branch
+- Can be manually triggered
+
+**What it tests**:
+- ✅ Health check and API connectivity
+- ✅ Product rating fetch and aggregation
+- ✅ Product reviews with pagination, filtering, sorting
+- ✅ Review creation and validation
+- ✅ Duplicate review prevention
+- ✅ Error handling scenarios
+
+**Requirements**:
+- CommerceTools secrets must be configured in repository settings
+- Tests automatically skip if secrets are not available
+- See [CI/CD Workflows README](.github/workflows/README.md) for setup instructions
+
+**Running Locally**:
+```bash
+cd backend
+npm run test:e2e  # Requires CommerceTools credentials
+```
 
 ### Manual Testing
 
@@ -303,6 +383,8 @@ For production deployment, consider:
 
 ## 📖 Additional Documentation
 
+### Core Documentation
+- **[CommerceTools Setup Guide](./docs/COMMERCETOOLS_SETUP.md)** - Complete integration guide with trial account setup
 - [Infrastructure Documentation](./infra/README.md)
 - [Backend API Documentation](./backend/README.md)
 - **[Backend Deployment Guide](./backend/docs/DEPLOYMENT.md)** - Complete CI/CD and deployment instructions

@@ -6,6 +6,41 @@
     </header>
 
     <main class="app__main">
+      <!-- Product ID Configuration -->
+      <section class="demo-section demo-section--config">
+        <h2 class="demo-section__title">⚙️ Configuration</h2>
+        <p class="demo-section__description">
+          Enter a Product ID to test with real CommerceTools data (UUID or key format supported).
+        </p>
+        
+        <div class="config-form">
+          <label for="product-id-input" class="config-form__label">
+            Product ID:
+          </label>
+          <input
+            id="product-id-input"
+            v-model="productId"
+            type="text"
+            class="config-form__input"
+            placeholder="e.g., test-product-1 or UUID"
+          />
+          <button
+            class="config-form__button"
+            @click="resetToDefault"
+          >
+            Reset to Default
+          </button>
+        </div>
+        
+        <div class="config-info">
+          <p><strong>Current Product ID:</strong> <code>{{ productId }}</code></p>
+          <p class="config-info__help">
+            💡 <strong>Tip:</strong> Both UUID format (e.g., <code>550e8400-e29b-41d4-a716-446655440000</code>) 
+            and key format (e.g., <code>test-product-1</code>) are supported.
+          </p>
+        </div>
+      </section>
+
       <!-- Component 1: Compact Rating Display -->
       <section class="demo-section">
         <h2 class="demo-section__title">Component 1: Compact Rating Display</h2>
@@ -17,7 +52,7 @@
           <div class="demo-card">
             <h3>With API Data</h3>
             <RatingCompact
-              product-id="test-product-1"
+              :product-id="productId"
               :auto-fetch="false"
               :average-rating="mockProductRating.averageRating"
               :total-reviews="mockProductRating.totalReviews"
@@ -71,7 +106,7 @@
 
         <div class="demo-card demo-card--full">
           <ReviewsList
-            product-id="test-product-1"
+            :product-id="productId"
             :page-size="5"
             :show-summary="true"
             @reviews-loaded="handleReviewsLoaded"
@@ -100,7 +135,7 @@
 
         <div class="demo-card">
           <ReviewFormButton
-            product-id="test-product-1"
+            :product-id="productId"
             button-text="Write Your Review"
             @submitted="handleReviewSubmitted"
             @opened="handleModalOpened"
@@ -169,7 +204,14 @@ interface EventLogItem {
   data: string;
 }
 
+const DEFAULT_PRODUCT_ID = 'test-product-1';
+const productId = ref<string>(DEFAULT_PRODUCT_ID);
 const eventLog = ref<EventLogItem[]>([]);
+
+const resetToDefault = () => {
+  productId.value = DEFAULT_PRODUCT_ID;
+  logEvent('product-id-reset', `Reset to: ${DEFAULT_PRODUCT_ID}`);
+};
 
 const logEvent = (name: string, data: any = '') => {
   const time = new Date().toLocaleTimeString();
@@ -394,6 +436,89 @@ body {
   text-decoration: underline;
 }
 
+/* Configuration Section Styles */
+.demo-section--config {
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+  border: 2px solid #667eea;
+}
+
+.config-form {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.config-form__label {
+  font-weight: 600;
+  color: #333;
+  font-size: 1rem;
+}
+
+.config-form__input {
+  flex: 1;
+  min-width: 250px;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: 'Monaco', 'Courier New', monospace;
+  transition: border-color 0.2s;
+}
+
+.config-form__input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.config-form__button {
+  padding: 0.75rem 1.5rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.config-form__button:hover {
+  background: #5568d3;
+}
+
+.config-form__button:active {
+  transform: scale(0.98);
+}
+
+.config-info {
+  background: white;
+  padding: 1rem;
+  border-radius: 6px;
+  border-left: 4px solid #667eea;
+}
+
+.config-info p {
+  margin: 0.5rem 0;
+  color: #333;
+}
+
+.config-info code {
+  background: #f5f5f5;
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: #667eea;
+}
+
+.config-info__help {
+  font-size: 0.875rem;
+  color: #666;
+  margin-top: 1rem !important;
+}
+
 @media (max-width: 768px) {
   .app__header h1 {
     font-size: 1.5rem;
@@ -414,6 +539,15 @@ body {
   .event-log__item {
     grid-template-columns: 1fr;
     gap: 0.25rem;
+  }
+
+  .config-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .config-form__input {
+    min-width: 100%;
   }
 }
 </style>

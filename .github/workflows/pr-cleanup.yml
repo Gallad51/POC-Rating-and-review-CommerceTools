@@ -61,9 +61,12 @@ jobs:
     - name: Terraform Destroy
       env:
         TF_VAR_jwt_secret: ${{ secrets.TF_VAR_jwt_secret || 'mock-jwt-secret-for-preview-environment' }}
-        TF_VAR_ctp_project_key: ${{ secrets.TF_VAR_ctp_project_key || '' }}
-        TF_VAR_ctp_client_id: ${{ secrets.TF_VAR_ctp_client_id || '' }}
-        TF_VAR_ctp_client_secret: ${{ secrets.TF_VAR_ctp_client_secret || '' }}
+        TF_VAR_ctp_project_key: ${{ secrets.COMMERCETOOLS_PROJECT_KEY || '' }}
+        TF_VAR_ctp_client_id: ${{ secrets.COMMERCETOOLS_CLIENT_ID || '' }}
+        TF_VAR_ctp_client_secret: ${{ secrets.COMMERCETOOLS_CLIENT_SECRET || '' }}
+        TF_VAR_ctp_api_url: ${{ secrets.COMMERCETOOLS_API_URL || 'https://api.europe-west1.gcp.commercetools.com' }}
+        TF_VAR_ctp_auth_url: ${{ secrets.COMMERCETOOLS_AUTH_URL || 'https://auth.europe-west1.gcp.commercetools.com' }}
+        TF_VAR_ctp_scopes: ${{ secrets.COMMERCETOOLS_SCOPES || 'manage_project,view_products' }}
         TF_VAR_backend_memory: ${{ vars.TF_VAR_backend_memory || '512Mi' }}
         TF_VAR_backend_cpu: ${{ vars.TF_VAR_backend_cpu || '1000m' }}
         TF_VAR_backend_max_instances: ${{ vars.TF_VAR_backend_max_instances || '10' }}
@@ -79,7 +82,7 @@ jobs:
           -var="backend_image=gcr.io/${{ env.PROJECT_ID }}/backend:${{ steps.env.outputs.env_name }}" \
           -var="frontend_image=gcr.io/${{ env.PROJECT_ID }}/frontend:${{ steps.env.outputs.env_name }}" \
           -var="create_backend_secrets=false" \
-          -var="enable_commercetools=false" \
+          -var="enable_commercetools=true" \
           -var="backend_min_instances=0" \
           || echo "Terraform destroy completed with warnings (services may not exist)"
 

@@ -1,0 +1,154 @@
+name: E2E Tests with CommerceTools
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:  # Allow manual trigger
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  e2e-tests:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        npm ci
+
+    - name: Run unit tests
+      run: |
+        cd backend
+        npm test
+
+    - name: Check if CommerceTools secrets are available
+      id: check_secrets
+      run: |
+        if [ -n "${{ secrets.COMMERCETOOLS_PROJECT_KEY }}" ] && \
+           [ -n "${{ secrets.COMMERCETOOLS_CLIENT_ID }}" ] && \
+           [ -n "${{ secrets.COMMERCETOOLS_CLIENT_SECRET }}" ]; then
+          echo "secrets_available=true" >> $GITHUB_OUTPUT
+          echo "✅ CommerceTools secrets are available"
+        else
+          echo "secrets_available=false" >> $GITHUB_OUTPUT
+          echo "⚠️  CommerceTools secrets are not available - E2E tests will be skipped"
+        fi
+
+    - name: Run E2E tests with CommerceTools API
+      if: steps.check_secrets.outputs.secrets_available == 'true'
+      env:
+        CTP_PROJECT_KEY: ${{ secrets.COMMERCETOOLS_PROJECT_KEY }}
+        CTP_CLIENT_ID: ${{ secrets.COMMERCETOOLS_CLIENT_ID }}
+        CTP_CLIENT_SECRET: ${{ secrets.COMMERCETOOLS_CLIENT_SECRET }}
+        CTP_API_URL: ${{ secrets.COMMERCETOOLS_API_URL || 'https://api.europe-west1.gcp.commercetools.com' }}
+        CTP_AUTH_URL: ${{ secrets.COMMERCETOOLS_AUTH_URL || 'https://auth.europe-west1.gcp.commercetools.com' }}
+        CTP_SCOPES: ${{ secrets.COMMERCETOOLS_SCOPES || 'manage_project,view_products' }}
+        TEST_PRODUCT_ID: ${{ secrets.TEST_PRODUCT_ID || 'test-product-id' }}
+        NODE_ENV: development  # Use development to enable real API mode
+      run: |
+        cd backend
+        echo "🧪 Running E2E tests with real CommerceTools API..."
+        npm run test:e2e
+
+    - name: E2E tests skipped
+      if: steps.check_secrets.outputs.secrets_available == 'false'
+      run: |
+        echo "⚠️  E2E tests were skipped because CommerceTools secrets are not configured."
+        echo ""
+        echo "To run E2E tests, configure the following secrets in your repository:"
+        echo "  - COMMERCETOOLS_PROJECT_KEY"
+        echo "  - COMMERCETOOLS_CLIENT_ID"
+        echo "  - COMMERCETOOLS_CLIENT_SECRET"
+        echo ""
+        echo "Optional secrets:"
+        echo "  - COMMERCETOOLS_API_URL (defaults to EU region)"
+        echo "  - COMMERCETOOLS_AUTH_URL (defaults to EU region)"
+        echo "  - COMMERCETOOLS_SCOPES (defaults to manage_project,view_products)"
+        echo "  - TEST_PRODUCT_ID (defaults to test-product-id)"
+
+    - name: Comment on PR with E2E test results
+      if: github.event_name == 'pull_request' && steps.check_secrets.outputs.secrets_available == 'true'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          const pr_number = context.payload.pull_request.number;
+          
+          const comment = `## 🧪 E2E Tests Completed
+          
+          CommerceTools API integration tests have been executed:
+          
+          - ✅ Unit tests: Passed
+          - ✅ E2E tests: Completed with real CommerceTools API
+          
+          ### Test Coverage
+          - Health check and API connectivity
+          - Product rating fetch and aggregation
+          - Product reviews with pagination
+          - Filtering and sorting operations
+          - Review creation and validation
+          - Duplicate review prevention
+          - Error handling scenarios
+          
+          ### Integration Details
+          - **Mode**: Real API (credentials detected)
+          - **Project**: \`${{ secrets.COMMERCETOOLS_PROJECT_KEY }}\`
+          - **API URL**: \`${{ secrets.COMMERCETOOLS_API_URL || 'https://api.europe-west1.gcp.commercetools.com' }}\`
+          
+          See [E2E test suite](https://github.com/${{ github.repository }}/blob/${{ github.sha }}/backend/src/services/commercetools.e2e.test.ts) for test details.`;
+          
+          // Find existing comment to update or create new one
+          const comments = await github.rest.issues.listComments({
+            owner,
+            repo,
+            issue_number: pr_number,
+          });
+          
+          const existingComment = comments.data.find(comment => 
+            comment.body.includes('E2E Tests Completed')
+          );
+          
+          if (existingComment) {
+            await github.rest.issues.updateComment({
+              owner,
+              repo,
+              comment_id: existingComment.id,
+              body: comment
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: pr_number,
+              body: comment
+            });
+          }
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: |
+          backend/coverage/
+          backend/*.log
+        retention-days: 30
