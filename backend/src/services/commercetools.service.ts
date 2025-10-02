@@ -3,10 +3,16 @@
  * Handles all interactions with CommerceTools API
  * Manages OAuth2 authentication and token refresh
  * 
- * Note: This is a mock implementation for POC
- * In production, integrate with actual CommerceTools SDK
+ * Supports both real CommerceTools API and mock mode for testing
  */
 
+import { 
+  ClientBuilder, 
+  type AuthMiddlewareOptions, 
+  type HttpMiddlewareOptions 
+} from '@commercetools/sdk-client-v2';
+import { createApiBuilderFromCtpClient } from '@commercetools/platform-sdk';
+import type { ByProjectKeyRequestBuilder } from '@commercetools/platform-sdk/dist/declarations/src/generated/client/by-project-key-request-builder';
 import { config } from '../config';
 import { logger } from '../config/logger';
 import type { Review, ReviewInput, ProductRating, PaginatedReviews, ReviewFilters } from '../types/review.types';
@@ -19,9 +25,86 @@ interface MockReview extends Review {
 class CommerceToolsService {
   private mockReviews: Map<string, MockReview[]> = new Map();
   private reviewIdCounter = 1;
+  private apiRoot: ByProjectKeyRequestBuilder | null = null;
+  private useMockMode: boolean;
 
   constructor() {
-    this.initializeMockData();
+    this.useMockMode = this.shouldUseMockMode();
+    
+    if (this.useMockMode) {
+      logger.info('CommerceTools service initialized in MOCK mode');
+      this.initializeMockData();
+    } else {
+      logger.info('CommerceTools service initialized in REAL API mode');
+      this.initializeCommerceToolsClient();
+    }
+  }
+
+  /**
+   * Determine if we should use mock mode based on configuration
+   */
+  private shouldUseMockMode(): boolean {
+    const { projectKey, clientId, clientSecret } = config.commerceTools;
+    
+    // Use mock mode if any required credential is missing
+    if (!projectKey || !clientId || !clientSecret) {
+      logger.warn('CommerceTools credentials not fully configured, using mock mode');
+      return true;
+    }
+    
+    // Use mock mode in test environment
+    if (config.nodeEnv === 'test') {
+      return true;
+    }
+    
+    return false;
+  }
+
+  /**
+   * Initialize CommerceTools API client
+   */
+  private initializeCommerceToolsClient(): void {
+    try {
+      const { projectKey, clientId, clientSecret, apiUrl, authUrl, scopes } = config.commerceTools;
+
+      const authMiddlewareOptions: AuthMiddlewareOptions = {
+        host: authUrl,
+        projectKey,
+        credentials: {
+          clientId,
+          clientSecret,
+        },
+        scopes,
+        fetch,
+      };
+
+      const httpMiddlewareOptions: HttpMiddlewareOptions = {
+        host: apiUrl,
+        fetch,
+      };
+
+      const client = new ClientBuilder()
+        .withProjectKey(projectKey)
+        .withClientCredentialsFlow(authMiddlewareOptions)
+        .withHttpMiddleware(httpMiddlewareOptions)
+        .withLoggerMiddleware()
+        .build();
+
+      this.apiRoot = createApiBuilderFromCtpClient(client).withProjectKey({
+        projectKey,
+      });
+
+      logger.info('CommerceTools API client initialized successfully', {
+        projectKey,
+        apiUrl,
+        authUrl,
+      });
+    } catch (error) {
+      logger.error('Failed to initialize CommerceTools API client', { error });
+      // Fall back to mock mode if initialization fails
+      this.useMockMode = true;
+      this.initializeMockData();
+    }
   }
 
   /**
@@ -65,10 +148,71 @@ class CommerceToolsService {
    */
   async getProductRating(productId: string): Promise<ProductRating> {
     try {
-      logger.info('Fetching product rating', { productId });
+      logger.info('Fetching product rating', { productId, useMockMode: this.useMockMode });
 
-      const reviews = this.getProductReviewsFromMock(productId);
-      const ratings = reviews.map((r) => r.rating);
+      if (this.useMockMode) {
+        return this.getProductRatingFromMock(productId);
+      }
+
+      return this.getProductRatingFromApi(productId);
+    } catch (error) {
+      logger.error('Error fetching product rating', { productId, error });
+      throw new Error('Failed to fetch product rating');
+    }
+  }
+
+  /**
+   * Get product rating from mock storage
+   */
+  private getProductRatingFromMock(productId: string): ProductRating {
+    const reviews = this.getProductReviewsFromMock(productId);
+    const ratings = reviews.map((r) => r.rating);
+
+    const ratingDistribution = {
+      1: ratings.filter((r) => r === 1).length,
+      2: ratings.filter((r) => r === 2).length,
+      3: ratings.filter((r) => r === 3).length,
+      4: ratings.filter((r) => r === 4).length,
+      5: ratings.filter((r) => r === 5).length,
+    };
+
+    const averageRating =
+      ratings.length > 0
+        ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length
+        : 0;
+
+    return {
+      productId,
+      averageRating: Math.round(averageRating * 10) / 10,
+      totalReviews: reviews.length,
+      ratingDistribution,
+    };
+  }
+
+  /**
+   * Get product rating from CommerceTools API
+   */
+  private async getProductRatingFromApi(productId: string): Promise<ProductRating> {
+    if (!this.apiRoot) {
+      throw new Error('CommerceTools API client not initialized');
+    }
+
+    try {
+      // Fetch reviews from CommerceTools API
+      const response = await this.apiRoot
+        .reviews()
+        .get({
+          queryArgs: {
+            where: `target(id="${productId}")`,
+            limit: 500, // Get all reviews for rating calculation
+          },
+        })
+        .execute();
+
+      const reviews = response.body.results || [];
+      const ratings = reviews
+        .filter((r) => r.rating !== undefined && r.rating !== null)
+        .map((r) => r.rating as number);
 
       const ratingDistribution = {
         1: ratings.filter((r) => r === 1).length,
@@ -90,8 +234,8 @@ class CommerceToolsService {
         ratingDistribution,
       };
     } catch (error) {
-      logger.error('Error fetching product rating', { productId, error });
-      throw new Error('Failed to fetch product rating');
+      logger.error('Error fetching product rating from API', { productId, error });
+      throw error;
     }
   }
 
@@ -105,48 +249,139 @@ class CommerceToolsService {
     filters?: ReviewFilters
   ): Promise<PaginatedReviews> {
     try {
-      logger.info('Fetching product reviews', { productId, page, limit, filters });
+      logger.info('Fetching product reviews', { productId, page, limit, filters, useMockMode: this.useMockMode });
 
-      let reviews = this.getProductReviewsFromMock(productId);
-
-      // Apply filters
-      if (filters?.rating) {
-        reviews = reviews.filter((r) => r.rating === filters.rating);
+      if (this.useMockMode) {
+        return this.getProductReviewsFromMockStorage(productId, page, limit, filters);
       }
 
-      if (filters?.verified !== undefined) {
-        reviews = reviews.filter((r) => r.isVerifiedPurchase === filters.verified);
-      }
-
-      // Apply sorting
-      if (filters?.sortBy === 'rating') {
-        reviews.sort((a, b) => {
-          const order = filters.sortOrder === 'asc' ? 1 : -1;
-          return (a.rating - b.rating) * order;
-        });
-      } else {
-        // Default sort by date
-        reviews.sort((a, b) => {
-          const order = filters?.sortOrder === 'asc' ? 1 : -1;
-          return (b.createdAt.getTime() - a.createdAt.getTime()) * order;
-        });
-      }
-
-      // Apply pagination
-      const offset = (page - 1) * limit;
-      const paginatedReviews = reviews.slice(offset, offset + limit);
-      const total = reviews.length;
-
-      return {
-        reviews: paginatedReviews,
-        total,
-        page,
-        limit,
-        hasMore: offset + paginatedReviews.length < total,
-      };
+      return this.getProductReviewsFromApi(productId, page, limit, filters);
     } catch (error) {
       logger.error('Error fetching product reviews', { productId, error });
       throw new Error('Failed to fetch product reviews');
+    }
+  }
+
+  /**
+   * Get paginated reviews from mock storage
+   */
+  private getProductReviewsFromMockStorage(
+    productId: string,
+    page: number = 1,
+    limit: number = 10,
+    filters?: ReviewFilters
+  ): PaginatedReviews {
+    let reviews = this.getProductReviewsFromMock(productId);
+
+    // Apply filters
+    if (filters?.rating) {
+      reviews = reviews.filter((r) => r.rating === filters.rating);
+    }
+
+    if (filters?.verified !== undefined) {
+      reviews = reviews.filter((r) => r.isVerifiedPurchase === filters.verified);
+    }
+
+    // Apply sorting
+    if (filters?.sortBy === 'rating') {
+      reviews.sort((a, b) => {
+        const order = filters.sortOrder === 'asc' ? 1 : -1;
+        return (a.rating - b.rating) * order;
+      });
+    } else {
+      // Default sort by date
+      reviews.sort((a, b) => {
+        const order = filters?.sortOrder === 'asc' ? 1 : -1;
+        return (b.createdAt.getTime() - a.createdAt.getTime()) * order;
+      });
+    }
+
+    // Apply pagination
+    const offset = (page - 1) * limit;
+    const paginatedReviews = reviews.slice(offset, offset + limit);
+    const total = reviews.length;
+
+    return {
+      reviews: paginatedReviews,
+      total,
+      page,
+      limit,
+      hasMore: offset + paginatedReviews.length < total,
+    };
+  }
+
+  /**
+   * Get paginated reviews from CommerceTools API
+   */
+  private async getProductReviewsFromApi(
+    productId: string,
+    page: number = 1,
+    limit: number = 10,
+    filters?: ReviewFilters
+  ): Promise<PaginatedReviews> {
+    if (!this.apiRoot) {
+      throw new Error('CommerceTools API client not initialized');
+    }
+
+    try {
+      const offset = (page - 1) * limit;
+      const whereConditions: string[] = [`target(id="${productId}")`];
+
+      // Apply rating filter
+      if (filters?.rating) {
+        whereConditions.push(`rating=${filters.rating}`);
+      }
+
+      // Build sort string
+      let sort = 'createdAt desc'; // Default sort
+      if (filters?.sortBy === 'rating') {
+        sort = `rating ${filters.sortOrder === 'asc' ? 'asc' : 'desc'}`;
+      } else if (filters?.sortBy === 'date') {
+        sort = `createdAt ${filters.sortOrder === 'asc' ? 'asc' : 'desc'}`;
+      }
+
+      const response = await this.apiRoot
+        .reviews()
+        .get({
+          queryArgs: {
+            where: whereConditions.join(' and '),
+            limit,
+            offset,
+            sort,
+          },
+        })
+        .execute();
+
+      const ctReviews = response.body.results || [];
+      const total = response.body.total || 0;
+
+      // Convert CommerceTools reviews to our Review type
+      const reviews: Review[] = ctReviews.map((ctReview) => ({
+        id: ctReview.id,
+        productId,
+        rating: ctReview.rating || 0,
+        comment: ctReview.text || '',
+        authorName: ctReview.authorName || 'Anonymous',
+        createdAt: new Date(ctReview.createdAt),
+        isVerifiedPurchase: ctReview.includedInStatistics || false,
+      }));
+
+      // Apply verified filter (not directly supported by API query)
+      let filteredReviews = reviews;
+      if (filters?.verified !== undefined) {
+        filteredReviews = reviews.filter((r) => r.isVerifiedPurchase === filters.verified);
+      }
+
+      return {
+        reviews: filteredReviews,
+        total,
+        page,
+        limit,
+        hasMore: offset + filteredReviews.length < total,
+      };
+    } catch (error) {
+      logger.error('Error fetching product reviews from API', { productId, error });
+      throw error;
     }
   }
 
@@ -156,7 +391,7 @@ class CommerceToolsService {
    */
   async createReview(reviewInput: ReviewInput, userId: string): Promise<Review> {
     try {
-      logger.info('Creating new review', { productId: reviewInput.productId, userId });
+      logger.info('Creating new review', { productId: reviewInput.productId, userId, useMockMode: this.useMockMode });
 
       // Validate rating range
       if (reviewInput.rating < config.review.minRating || reviewInput.rating > config.review.maxRating) {
@@ -168,41 +403,106 @@ class CommerceToolsService {
         throw new Error(`Comment must not exceed ${config.review.maxCommentLength} characters`);
       }
 
-      // Check for duplicate reviews (anti-abuse)
-      const existingReviews = this.getProductReviewsFromMock(reviewInput.productId);
-      // Find reviews with a userId property (we need to track this in the mock review)
-      const existingProductReviews = this.mockReviews.get(reviewInput.productId) || [];
-      const duplicateReview = existingProductReviews.find((r: any) => r.userId === userId);
-      
-      if (duplicateReview) {
-        throw new Error('You have already reviewed this product');
+      if (this.useMockMode) {
+        return this.createReviewInMock(reviewInput, userId);
       }
 
-      // Create new review
-      const newReview: any = {
-        id: `review-${this.reviewIdCounter++}`,
-        productId: reviewInput.productId,
-        rating: reviewInput.rating,
-        comment: reviewInput.comment,
-        authorName: reviewInput.authorName,
-        createdAt: new Date(),
-        isVerifiedPurchase: false,
-        version: 1,
-        userId, // Track userId internally for duplicate detection
-      };
-
-      // Store in mock storage
-      const productReviews = this.mockReviews.get(reviewInput.productId) || [];
-      productReviews.push(newReview);
-      this.mockReviews.set(reviewInput.productId, productReviews);
-
-      logger.info('Review created successfully', { reviewId: newReview.id, userId });
-
-      // Return without internal fields
-      const { version, userId: internalUserId, ...review } = newReview;
-      return review;
+      return this.createReviewInApi(reviewInput, userId);
     } catch (error: any) {
       logger.error('Error creating review', { error, userId });
+      throw error;
+    }
+  }
+
+  /**
+   * Create review in mock storage
+   */
+  private createReviewInMock(reviewInput: ReviewInput, userId: string): Review {
+    // Check for duplicate reviews (anti-abuse)
+    const existingProductReviews = this.mockReviews.get(reviewInput.productId) || [];
+    const duplicateReview = existingProductReviews.find((r: any) => r.userId === userId);
+    
+    if (duplicateReview) {
+      throw new Error('You have already reviewed this product');
+    }
+
+    // Create new review
+    const newReview: any = {
+      id: `review-${this.reviewIdCounter++}`,
+      productId: reviewInput.productId,
+      rating: reviewInput.rating,
+      comment: reviewInput.comment,
+      authorName: reviewInput.authorName,
+      createdAt: new Date(),
+      isVerifiedPurchase: false,
+      version: 1,
+      userId, // Track userId internally for duplicate detection
+    };
+
+    // Store in mock storage
+    const productReviews = this.mockReviews.get(reviewInput.productId) || [];
+    productReviews.push(newReview);
+    this.mockReviews.set(reviewInput.productId, productReviews);
+
+    logger.info('Review created successfully in mock storage', { reviewId: newReview.id, userId });
+
+    // Return without internal fields
+    const { version, userId: internalUserId, ...review } = newReview;
+    return review;
+  }
+
+  /**
+   * Create review in CommerceTools API
+   */
+  private async createReviewInApi(reviewInput: ReviewInput, userId: string): Promise<Review> {
+    if (!this.apiRoot) {
+      throw new Error('CommerceTools API client not initialized');
+    }
+
+    try {
+      // Create review draft
+      const reviewDraft = {
+        authorName: reviewInput.authorName || 'Anonymous',
+        text: reviewInput.comment,
+        rating: reviewInput.rating,
+        target: {
+          typeId: 'product' as const,
+          id: reviewInput.productId,
+        },
+        key: `review-${userId}-${reviewInput.productId}-${Date.now()}`,
+        uniquenessValue: userId, // Use userId to prevent duplicates
+      };
+
+      const response = await this.apiRoot
+        .reviews()
+        .post({
+          body: reviewDraft,
+        })
+        .execute();
+
+      const ctReview = response.body;
+
+      logger.info('Review created successfully in CommerceTools API', {
+        reviewId: ctReview.id,
+        userId,
+      });
+
+      // Convert to our Review type
+      return {
+        id: ctReview.id,
+        productId: reviewInput.productId,
+        rating: ctReview.rating || 0,
+        comment: ctReview.text || '',
+        authorName: ctReview.authorName || 'Anonymous',
+        createdAt: new Date(ctReview.createdAt),
+        isVerifiedPurchase: ctReview.includedInStatistics || false,
+      };
+    } catch (error: any) {
+      // Check for duplicate review error
+      if (error.statusCode === 400 && error.message?.includes('DuplicateField')) {
+        throw new Error('You have already reviewed this product');
+      }
+      logger.error('Error creating review in API', { error, userId });
       throw error;
     }
   }
@@ -237,9 +537,23 @@ class CommerceToolsService {
    */
   async healthCheck(): Promise<boolean> {
     try {
-      // For POC, we'll just check if the service is initialized
-      // In production, make an actual API call to verify connection
-      return this.mockReviews !== null && this.mockReviews !== undefined;
+      if (this.useMockMode) {
+        // In mock mode, just check if service is initialized
+        return this.mockReviews !== null && this.mockReviews !== undefined;
+      }
+
+      // In API mode, make an actual API call to verify connection
+      if (!this.apiRoot) {
+        return false;
+      }
+
+      // Try to fetch project info as a lightweight health check
+      await this.apiRoot
+        .get()
+        .execute();
+
+      logger.info('CommerceTools API health check passed');
+      return true;
     } catch (error) {
       logger.error('CommerceTools health check failed', { error });
       return false;
