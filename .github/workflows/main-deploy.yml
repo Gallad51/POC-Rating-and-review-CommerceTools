@@ -1,0 +1,256 @@
+name: Main Environment Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # Manual trigger
+
+# Prevent concurrent deployments to main environment
+concurrency:
+  group: main-deployment
+  cancel-in-progress: false
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID || 'ratings-reviews-poc' }}
+  REGION: ${{ vars.GCP_REGION || 'europe-west1' }}
+  SERVICE_NAME: ratings-reviews
+  ENVIRONMENT: main
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        npm ci
+
+    - name: Lint backend
+      run: |
+        cd backend
+        npm run lint || echo "⚠️  Linting not configured or failed - continuing"
+
+    - name: Test backend
+      run: |
+        cd backend
+        npm test
+
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Lint frontend
+      run: |
+        cd frontend
+        npm run lint || echo "⚠️  Linting not configured or failed - continuing"
+
+    - name: Test frontend
+      run: |
+        cd frontend
+        npm test
+
+  build-and-deploy:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Generate environment details
+      id: env
+      run: |
+        # Use short commit SHA for image tags
+        SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-8)
+        IMAGE_TAG="main-${SHORT_SHA}"
+        # Service names for main environment
+        BACKEND_SERVICE="${SERVICE_NAME}-backend-${ENVIRONMENT}"
+        FRONTEND_SERVICE="${SERVICE_NAME}-frontend-${ENVIRONMENT}"
+        echo "Image tag: ${IMAGE_TAG}"
+        echo "Commit SHA: ${SHORT_SHA}"
+        echo "Backend service: ${BACKEND_SERVICE}"
+        echo "Frontend service: ${FRONTEND_SERVICE}"
+        echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+        echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
+        echo "backend_service=${BACKEND_SERVICE}" >> $GITHUB_OUTPUT
+        echo "frontend_service=${FRONTEND_SERVICE}" >> $GITHUB_OUTPUT
+
+    - name: Authenticate to Google Cloud
+      id: auth
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+        project_id: ${{ env.PROJECT_ID }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Install gcloud beta components
+      run: |
+        gcloud components install beta --quiet
+
+    - name: Configure gcloud project
+      run: |
+        echo "Project ID: ${{ env.PROJECT_ID }}"
+        echo "Region: ${{ env.REGION }}"
+        gcloud config set project ${{ env.PROJECT_ID }}
+        gcloud config set run/region ${{ env.REGION }}
+        gcloud config list
+
+    - name: Configure Docker for GCR
+      run: gcloud auth configure-docker
+
+    - name: Build backend
+      run: |
+        cd backend
+        npm ci
+        npm run build
+
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm ci
+        npm run build
+
+    - name: Build backend Docker image
+      run: |
+        cd backend
+        docker build -t gcr.io/${{ env.PROJECT_ID }}/backend:${{ steps.env.outputs.image_tag }} .
+        docker tag gcr.io/${{ env.PROJECT_ID }}/backend:${{ steps.env.outputs.image_tag }} gcr.io/${{ env.PROJECT_ID }}/backend:main-latest
+
+    - name: Build frontend Docker image
+      run: |
+        cd frontend
+        docker build -t gcr.io/${{ env.PROJECT_ID }}/frontend:${{ steps.env.outputs.image_tag }} .
+        docker tag gcr.io/${{ env.PROJECT_ID }}/frontend:${{ steps.env.outputs.image_tag }} gcr.io/${{ env.PROJECT_ID }}/frontend:main-latest
+
+    - name: Push Docker images
+      run: |
+        docker push gcr.io/${{ env.PROJECT_ID }}/backend:${{ steps.env.outputs.image_tag }}
+        docker push gcr.io/${{ env.PROJECT_ID }}/backend:main-latest
+        docker push gcr.io/${{ env.PROJECT_ID }}/frontend:${{ steps.env.outputs.image_tag }}
+        docker push gcr.io/${{ env.PROJECT_ID }}/frontend:main-latest
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.6.0
+
+    - name: Terraform Init
+      run: |
+        cd infra
+        terraform init \
+          -backend-config="bucket=${{ secrets.TF_STATE_BUCKET || vars.TF_STATE_BUCKET }}" \
+          -backend-config="prefix=terraform/state/main"
+
+    - name: Terraform Plan
+      env:
+        TF_VAR_jwt_secret: ${{ secrets.TF_VAR_jwt_secret || 'change-me-in-production' }}
+        TF_VAR_ctp_project_key: ${{ secrets.COMMERCETOOLS_PROJECT_KEY || '' }}
+        TF_VAR_ctp_client_id: ${{ secrets.COMMERCETOOLS_CLIENT_ID || '' }}
+        TF_VAR_ctp_client_secret: ${{ secrets.COMMERCETOOLS_CLIENT_SECRET || '' }}
+        TF_VAR_ctp_api_url: ${{ secrets.COMMERCETOOLS_API_URL || 'https://api.europe-west1.gcp.commercetools.com' }}
+        TF_VAR_ctp_auth_url: ${{ secrets.COMMERCETOOLS_AUTH_URL || 'https://auth.europe-west1.gcp.commercetools.com' }}
+        TF_VAR_ctp_scopes: ${{ secrets.COMMERCETOOLS_SCOPES || 'manage_project,view_products' }}
+        TF_VAR_backend_memory: ${{ vars.TF_VAR_backend_memory || '1Gi' }}
+        TF_VAR_backend_cpu: ${{ vars.TF_VAR_backend_cpu || '1000m' }}
+        TF_VAR_backend_max_instances: ${{ vars.TF_VAR_backend_max_instances || '10' }}
+        TF_VAR_rate_limit_max_requests: ${{ vars.TF_VAR_rate_limit_max_requests || '100' }}
+        TF_VAR_cors_origin: ${{ vars.TF_VAR_cors_origin || '*' }}
+      run: |
+        cd infra
+        terraform plan \
+          -var="project_id=${{ env.PROJECT_ID }}" \
+          -var="region=${{ env.REGION }}" \
+          -var="service_name=${{ env.SERVICE_NAME }}" \
+          -var="environment=${{ env.ENVIRONMENT }}" \
+          -var="backend_image=gcr.io/${{ env.PROJECT_ID }}/backend:${{ steps.env.outputs.image_tag }}" \
+          -var="frontend_image=gcr.io/${{ env.PROJECT_ID }}/frontend:${{ steps.env.outputs.image_tag }}" \
+          -var="create_backend_secrets=true" \
+          -var="enable_commercetools=true" \
+          -var="backend_min_instances=0" \
+          -out=tfplan
+
+    - name: Terraform Apply
+      env:
+        TF_VAR_jwt_secret: ${{ secrets.TF_VAR_jwt_secret || 'change-me-in-production' }}
+        TF_VAR_ctp_project_key: ${{ secrets.COMMERCETOOLS_PROJECT_KEY || '' }}
+        TF_VAR_ctp_client_id: ${{ secrets.COMMERCETOOLS_CLIENT_ID || '' }}
+        TF_VAR_ctp_client_secret: ${{ secrets.COMMERCETOOLS_CLIENT_SECRET || '' }}
+        TF_VAR_ctp_api_url: ${{ secrets.COMMERCETOOLS_API_URL || 'https://api.europe-west1.gcp.commercetools.com' }}
+        TF_VAR_ctp_auth_url: ${{ secrets.COMMERCETOOLS_AUTH_URL || 'https://auth.europe-west1.gcp.commercetools.com' }}
+        TF_VAR_ctp_scopes: ${{ secrets.COMMERCETOOLS_SCOPES || 'manage_project,view_products' }}
+        TF_VAR_backend_memory: ${{ vars.TF_VAR_backend_memory || '1Gi' }}
+        TF_VAR_backend_cpu: ${{ vars.TF_VAR_backend_cpu || '1000m' }}
+        TF_VAR_backend_max_instances: ${{ vars.TF_VAR_backend_max_instances || '10' }}
+        TF_VAR_rate_limit_max_requests: ${{ vars.TF_VAR_rate_limit_max_requests || '100' }}
+        TF_VAR_cors_origin: ${{ vars.TF_VAR_cors_origin || '*' }}
+      run: |
+        cd infra
+        terraform apply tfplan
+
+    - name: Get service URLs from Terraform outputs
+      id: urls
+      run: |
+        cd infra
+        BACKEND_URL=$(terraform output -raw backend_url 2>/dev/null || echo "")
+        FRONTEND_URL=$(terraform output -raw frontend_url 2>/dev/null || echo "")
+        
+        # Fallback to gcloud if Terraform outputs are not available
+        if [ -z "$BACKEND_URL" ]; then
+          BACKEND_URL=$(gcloud run services describe ${{ steps.env.outputs.backend_service }} --region=${{ env.REGION }} --format='value(status.url)' 2>/dev/null || echo "")
+        fi
+        if [ -z "$FRONTEND_URL" ]; then
+          FRONTEND_URL=$(gcloud run services describe ${{ steps.env.outputs.frontend_service }} --region=${{ env.REGION }} --format='value(status.url)' 2>/dev/null || echo "")
+        fi
+        
+        echo "backend_url=${BACKEND_URL}" >> $GITHUB_OUTPUT
+        echo "frontend_url=${FRONTEND_URL}" >> $GITHUB_OUTPUT
+
+    - name: Test deployments
+      run: |
+        echo "Testing backend health check..."
+        curl -f ${{ steps.urls.outputs.backend_url }}/health || exit 1
+        
+        echo "Testing frontend health check..."
+        curl -f ${{ steps.urls.outputs.frontend_url }}/health || exit 1
+        
+        echo "Testing backend API..."
+        curl -f ${{ steps.urls.outputs.backend_url }}/api/reviews/health || exit 1
+
+    - name: Deployment Summary
+      run: |
+        echo "## 🚀 Main Environment Deployment Complete"
+        echo ""
+        echo "### Service URLs:"
+        echo "- Frontend: ${{ steps.urls.outputs.frontend_url }}"
+        echo "- Backend: ${{ steps.urls.outputs.backend_url }}"
+        echo ""
+        echo "### Deployment Details:"
+        echo "- Environment: main"
+        echo "- Commit: ${{ steps.env.outputs.short_sha }}"
+        echo "- Region: ${{ env.REGION }}"
+        echo "- Backend Service: ${{ steps.env.outputs.backend_service }}"
+        echo "- Frontend Service: ${{ steps.env.outputs.frontend_service }}"
