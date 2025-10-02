@@ -80,7 +80,8 @@ This POC uses a **monorepo structure** with the following components:
 
 1. **Create a Pull Request**: Every PR automatically triggers deployment of preview environments
 2. **Review URLs**: GitHub bot comments with frontend and backend URLs
-3. **Auto-cleanup**: Preview environments are automatically deleted when PR is closed
+3. **Merge to Main**: Merging to main automatically deploys to the main environment
+4. **Auto-cleanup**: Preview environments are automatically deleted when PR is closed
 
 ## 🔄 CI/CD Workflow
 
@@ -96,12 +97,27 @@ graph LR
     F --> G[Comment URLs on PR]
 ```
 
+### Main Environment Flow
+
+```mermaid
+graph LR
+    A[Push to Main] --> B[Lint & Test]
+    B --> C{Tests Pass?}
+    C -->|Yes| D[Build Docker Images]
+    C -->|No| E[Fail Deployment]
+    D --> F[Push to GCR]
+    F --> G[Deploy via Terraform]
+    G --> H[Health Checks]
+```
+
 ### Environment Naming Convention
 
-- **Format**: `pr-{PR_NUMBER}-{BRANCH_NAME}`
-- **Services**: 
+- **PR Preview Format**: `pr-{PR_NUMBER}-{BRANCH_NAME}`
   - Backend: `ratings-reviews-backend-pr-123-feature-branch`
   - Frontend: `ratings-reviews-frontend-pr-123-feature-branch`
+- **Main Environment**: `main`
+  - Backend: `ratings-reviews-backend-main`
+  - Frontend: `ratings-reviews-frontend-main`
 
 ## 🏛️ Infrastructure
 
