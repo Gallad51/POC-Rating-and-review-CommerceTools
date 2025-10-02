@@ -22,11 +22,13 @@ Add this to your HTML page:
 <script type="module" src="path/to/ratings-reviews-components.es.js"></script>
 ```
 
-Or via CDN (if published):
+Or via CDN (Cloud Run hosted):
 
 ```html
-<script type="module" src="https://unpkg.com/ratings-reviews-frontend/dist/ratings-reviews-components.es.js"></script>
+<script type="module" src="https://ratings-reviews-frontend-[YOUR-ENV].run.app/ratings-reviews-components.es.js"></script>
 ```
+
+> **Note**: Replace `[YOUR-ENV]` with your deployment environment. For PR previews, this will be automatically provided in the PR comment. For production, use your production Cloud Run URL.
 
 ### Step 2: Use the Components in Your HTML
 

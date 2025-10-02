@@ -6,9 +6,26 @@ This guide provides comprehensive instructions for integrating the **native Web 
 
 ## 📦 Installation Methods
 
-### Method 1: Direct Download (Recommended for Most Use Cases)
+### Method 1: Cloud Run CDN (Recommended)
 
-1. Download the `ratings-reviews-components.es.js` (or `.umd.js` or `.iife.js`) from the releases
+Use the hosted version from Cloud Run:
+
+```html
+<script type="module" src="https://ratings-reviews-frontend-[YOUR-ENV].run.app/ratings-reviews-components.es.js"></script>
+```
+
+> **Note**: Replace `[YOUR-ENV]` with your deployment environment:
+> - For **PR previews**: The URL is provided in the PR deployment comment (e.g., `ratings-reviews-frontend-pr-123-fix-issue.run.app`)
+> - For **production**: Use your production Cloud Run service URL
+
+**Example for PR preview:**
+```html
+<script type="module" src="https://ratings-reviews-frontend-pr-123-fix-issue.run.app/ratings-reviews-components.es.js"></script>
+```
+
+### Method 2: Direct Download
+
+1. Download the `ratings-reviews-components.es.js` (or `.umd.js` or `.iife.js`) from the releases or Cloud Run service
 2. Place it in your website's static assets directory
 3. Include it in your HTML
 
@@ -16,7 +33,7 @@ This guide provides comprehensive instructions for integrating the **native Web 
 <script type="module" src="/path/to/ratings-reviews-components.es.js"></script>
 ```
 
-### Method 2: NPM Package
+### Method 3: NPM Package
 
 ```bash
 npm install ratings-reviews-frontend
@@ -28,12 +45,6 @@ Then import in your JavaScript:
 import 'ratings-reviews-frontend';
 // Or specify the exact file:
 import 'ratings-reviews-frontend/dist/ratings-reviews-components.es.js';
-```
-
-### Method 3: CDN (Browser)
-
-```html
-<script type="module" src="https://unpkg.com/ratings-reviews-frontend/dist/ratings-reviews-components.es.js"></script>
 ```
 
 ## 🚀 Quick Integration Examples

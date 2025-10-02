@@ -9,15 +9,15 @@
       {{ buttonText }}
     </button>
 
-    <Teleport to="body">
-      <div
-        v-if="isOpen"
-        class="review-modal"
-        role="dialog"
-        aria-modal="true"
-        :aria-labelledby="modalTitleId"
-        @click.self="handleBackdropClick"
-      >
+    <!-- Modal without Teleport for Web Components compatibility -->
+    <div
+      v-if="isOpen"
+      class="review-modal"
+      role="dialog"
+      aria-modal="true"
+      :aria-labelledby="modalTitleId"
+      @click.self="handleBackdropClick"
+    >
         <div class="review-modal__content">
           <div class="review-modal__header">
             <h2 :id="modalTitleId" class="review-modal__title">Write a Review</h2>
@@ -148,7 +148,6 @@
           </form>
         </div>
       </div>
-    </Teleport>
   </div>
 </template>
 
@@ -370,10 +369,10 @@ const handleKeydown = (e: KeyboardEvent) => {
 watch(isOpen, (value) => {
   if (value) {
     document.addEventListener('keydown', handleKeydown);
-    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    // Note: Cannot control document.body.style.overflow from within Shadow DOM
+    // The modal's overflow-y: auto handles scrolling within the modal
   } else {
     document.removeEventListener('keydown', handleKeydown);
-    document.body.style.overflow = '';
   }
 });
 
@@ -384,6 +383,11 @@ defineExpose({
 </script>
 
 <style scoped>
+.review-form-modal {
+  position: relative;
+  display: inline-block;
+}
+
 .review-form-button {
   display: inline-flex;
   align-items: center;
