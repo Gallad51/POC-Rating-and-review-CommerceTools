@@ -11,11 +11,12 @@ This directory contains CI/CD workflows for the POC Rating and Review project.
 **Purpose**: Automatically builds and deploys preview environments for each pull request.
 
 **What it does**:
-- Builds backend and frontend Docker images
+- Builds backend and frontend Docker images with unique tags (PR + commit SHA)
 - Runs unit tests
 - Deploys to Google Cloud Run with unique environment names
 - Posts deployment URLs as PR comments
 - Automatically scales to zero when idle
+- **Ensures code changes trigger redeployment** by using commit SHA in image tags
 
 **Environment Variables**:
 - Uses CommerceTools integration enabled by default (`enable_commercetools=true`)
@@ -110,6 +111,29 @@ To enable E2E testing with CommerceTools:
 | `TF_STATE_BUCKET` | GCS bucket for Terraform state | ✅ Yes |
 
 ## Workflow Behavior
+
+### Image Tagging Strategy
+
+To ensure that code changes trigger proper redeployment, the PR preview workflow uses a **unique image tag** for each commit:
+
+```
+Image Tag Format: pr-{PR_NUMBER}-{BRANCH_NAME}-{SHORT_SHA}
+Example: pr-42-fix-bug-a1b2c3d4
+```
+
+**Why this matters:**
+- Docker images are pushed with tags based on PR number, branch name, AND commit SHA
+- When you push new code, the commit SHA changes, creating a new unique image tag
+- Terraform detects the image variable change (different tag string)
+- Cloud Run services are updated to pull the new image
+- **Result**: Every code change automatically triggers redeployment ✅
+
+**Without commit SHA** (previous behavior):
+- Image tag only based on PR number and branch: `pr-42-fix-bug`
+- New commits would overwrite the same tag
+- Terraform wouldn't detect a change (same variable value)
+- Cloud Run wouldn't pull the updated image
+- **Result**: Code changes would not deploy ❌
 
 ### Preview Deployments
 ```

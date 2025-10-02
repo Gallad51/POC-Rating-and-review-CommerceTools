@@ -47,13 +47,20 @@ jobs:
         PR_NUMBER=${{ github.event.number }}
         BRANCH_NAME=$(echo "${{ github.head_ref }}" | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]' | sed 's/^-\+\|-\+$//g' | cut -c1-20)
         ENV_NAME="pr-${PR_NUMBER}-${BRANCH_NAME}"
+        # Use short commit SHA to ensure unique image tags that trigger redeployment
+        SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-8)
+        IMAGE_TAG="${ENV_NAME}-${SHORT_SHA}"
         # Ensure service names comply with Cloud Run naming requirements (lowercase, alphanumeric and hyphens, max 63 chars)
         BACKEND_SERVICE=$(echo "${SERVICE_NAME}-backend-${ENV_NAME}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g' | cut -c1-63)
         FRONTEND_SERVICE=$(echo "${SERVICE_NAME}-frontend-${ENV_NAME}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g' | cut -c1-63)
         echo "Environment name: ${ENV_NAME}"
+        echo "Image tag: ${IMAGE_TAG}"
+        echo "Commit SHA: ${SHORT_SHA}"
         echo "Backend service: ${BACKEND_SERVICE}"
         echo "Frontend service: ${FRONTEND_SERVICE}"
         echo "env_name=${ENV_NAME}" >> $GITHUB_OUTPUT
+        echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+        echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
         echo "backend_service=${BACKEND_SERVICE}" >> $GITHUB_OUTPUT
         echo "frontend_service=${FRONTEND_SERVICE}" >> $GITHUB_OUTPUT
 
@@ -99,17 +106,17 @@ jobs:
     - name: Build backend Docker image
       run: |
         cd backend
-        docker build -t gcr.io/${{ env.PROJECT_ID }}/backend:${{ steps.env.outputs.env_name }} .
+        docker build -t gcr.io/${{ env.PROJECT_ID }}/backend:${{ steps.env.outputs.image_tag }} .
 
     - name: Build frontend Docker image
       run: |
         cd frontend
-        docker build -t gcr.io/${{ env.PROJECT_ID }}/frontend:${{ steps.env.outputs.env_name }} .
+        docker build -t gcr.io/${{ env.PROJECT_ID }}/frontend:${{ steps.env.outputs.image_tag }} .
 
     - name: Push Docker images
       run: |
-        docker push gcr.io/${{ env.PROJECT_ID }}/backend:${{ steps.env.outputs.env_name }}
-        docker push gcr.io/${{ env.PROJECT_ID }}/frontend:${{ steps.env.outputs.env_name }}
+        docker push gcr.io/${{ env.PROJECT_ID }}/backend:${{ steps.env.outputs.image_tag }}
+        docker push gcr.io/${{ env.PROJECT_ID }}/frontend:${{ steps.env.outputs.image_tag }}
 
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v3
@@ -144,8 +151,8 @@ jobs:
           -var="region=${{ env.REGION }}" \
           -var="service_name=${{ env.SERVICE_NAME }}" \
           -var="environment=${{ steps.env.outputs.env_name }}" \
-          -var="backend_image=gcr.io/${{ env.PROJECT_ID }}/backend:${{ steps.env.outputs.env_name }}" \
-          -var="frontend_image=gcr.io/${{ env.PROJECT_ID }}/frontend:${{ steps.env.outputs.env_name }}" \
+          -var="backend_image=gcr.io/${{ env.PROJECT_ID }}/backend:${{ steps.env.outputs.image_tag }}" \
+          -var="frontend_image=gcr.io/${{ env.PROJECT_ID }}/frontend:${{ steps.env.outputs.image_tag }}" \
           -var="create_backend_secrets=false" \
           -var="enable_commercetools=true" \
           -var="backend_min_instances=0" \
@@ -221,6 +228,7 @@ jobs:
           
           ### Environment Details:
           - **Environment**: \`${{ steps.env.outputs.env_name }}\`
+          - **Commit**: \`${{ steps.env.outputs.short_sha }}\`
           - **Region**: \`${{ env.REGION }}\`
           - **Auto-cleanup**: Environments are automatically cleaned up when PR is closed
           
