@@ -18,8 +18,12 @@ import {
   validateReviewFilters,
   validateCreateReview,
 } from '../middleware/validation.middleware';
+import { config } from '../config';
 
 const router = Router();
+
+// Use real authentication in test/production, mock auth only in development
+const authMiddleware = config.nodeEnv === 'development' ? mockAuth : authenticate;
 
 /**
  * @route   GET /api/reviews/health
@@ -63,17 +67,17 @@ router.get(
 /**
  * @route   POST /api/products/:productId/reviews
  * @desc    Create a new review for a product
- * @access  Public (POC mode - uses mock authentication)
+ * @access  Protected (requires authentication in test/production, uses mock auth in development)
  * @body    rating - Rating value (1-5)
  * @body    comment - Review comment (optional, max 1000 chars)
  * @body    authorName - Author display name (optional, max 100 chars)
- * @note    For production, replace mockAuth with authenticate middleware
+ * @note    Authentication mode is environment-based: mock in development, real in test/production
  */
 router.post(
   '/:productId/reviews',
   writeRateLimiter,
   userRateLimiter,
-  mockAuth, // POC: Using mock auth instead of real authentication
+  authMiddleware, // Environment-aware: mockAuth in development, authenticate in test/production
   validateProductId,
   validateCreateReview,
   createReview
