@@ -10,7 +10,7 @@ import {
   createReview,
   reviewHealthCheck,
 } from '../controllers/review.controller';
-import { authenticate } from '../middleware/auth.middleware';
+import { authenticate, mockAuth } from '../middleware/auth.middleware';
 import { apiRateLimiter, writeRateLimiter, userRateLimiter } from '../middleware/ratelimit.middleware';
 import {
   validateProductId,
@@ -63,16 +63,17 @@ router.get(
 /**
  * @route   POST /api/products/:productId/reviews
  * @desc    Create a new review for a product
- * @access  Private (requires authentication)
+ * @access  Public (POC mode - uses mock authentication)
  * @body    rating - Rating value (1-5)
  * @body    comment - Review comment (optional, max 1000 chars)
  * @body    authorName - Author display name (optional, max 100 chars)
+ * @note    For production, replace mockAuth with authenticate middleware
  */
 router.post(
   '/:productId/reviews',
   writeRateLimiter,
   userRateLimiter,
-  authenticate,
+  mockAuth, // POC: Using mock auth instead of real authentication
   validateProductId,
   validateCreateReview,
   createReview

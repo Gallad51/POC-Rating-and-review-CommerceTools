@@ -235,7 +235,6 @@ Response:
 
 ```bash
 POST /api/products/:productId/reviews
-Authorization: Bearer <token>
 Content-Type: application/json
 
 {
@@ -244,6 +243,8 @@ Content-Type: application/json
   "authorName": "John D."
 }
 ```
+
+**Note**: For POC purposes, authentication is disabled. The backend uses mock authentication to allow anonymous review submissions. For production deployment, replace `mockAuth` with `authenticate` middleware in `src/routes/review.routes.ts`.
 
 Response:
 ```json

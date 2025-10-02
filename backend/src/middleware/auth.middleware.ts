@@ -97,6 +97,29 @@ export const optionalAuth = (
 };
 
 /**
+ * Mock authentication for POC - always allows requests with demo user
+ * For production, use the real authenticate middleware
+ */
+export const mockAuth = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  // Attach a mock user to request for POC purposes
+  req.user = {
+    userId: 'demo-user-' + Date.now(),
+  };
+
+  logger.info('Mock authentication - demo mode enabled', {
+    userId: req.user.userId,
+    path: req.path,
+    method: req.method,
+  });
+
+  next();
+};
+
+/**
  * Example: Generate JWT token (for testing purposes)
  * In production, this would be handled by your authentication service
  */
