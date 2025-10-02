@@ -68,7 +68,7 @@ New E2E test suite (`backend/src/services/commercetools.e2e.test.ts`) includes:
 - **Create Review Tests**: Validate review creation and duplicate prevention
 - **Error Handling Tests**: Test graceful error handling
 
-#### Running E2E Tests
+#### Running E2E Tests Locally
 
 Tests automatically skip if credentials are not available.
 
@@ -93,6 +93,35 @@ npm run test:e2e
 cd backend
 CTP_PROJECT_KEY=xxx CTP_CLIENT_ID=xxx CTP_CLIENT_SECRET=xxx bash scripts/run-e2e-tests.sh
 ```
+
+#### CI/CD Integration
+
+The repository includes a GitHub Actions workflow (`.github/workflows/e2e-tests.yml`) that automatically runs E2E tests on every pull request and push to main.
+
+**Features:**
+- Automatically runs on PR creation and updates
+- Can be triggered manually via workflow_dispatch
+- Uses repository secrets for CommerceTools credentials
+- Comments on PRs with test results
+- Skips gracefully if secrets are not configured
+
+**Required Repository Secrets:**
+- `COMMERCETOOLS_PROJECT_KEY` - Your CommerceTools project key
+- `COMMERCETOOLS_CLIENT_ID` - OAuth2 client ID
+- `COMMERCETOOLS_CLIENT_SECRET` - OAuth2 client secret
+
+**Optional Repository Secrets:**
+- `COMMERCETOOLS_API_URL` - API endpoint (defaults to EU region)
+- `COMMERCETOOLS_AUTH_URL` - Auth endpoint (defaults to EU region)
+- `COMMERCETOOLS_SCOPES` - API scopes (defaults to manage_project,view_products)
+- `TEST_PRODUCT_ID` - Product ID for testing (defaults to test-product-id)
+
+The workflow will:
+1. Check if secrets are available
+2. Run unit tests
+3. Run E2E tests with real API if secrets exist
+4. Comment on PR with results
+5. Upload test artifacts
 
 #### Test Requirements
 

@@ -209,13 +209,16 @@ Optional secrets for CommerceTools integration:
 
 | Secret | Description | Required |
 |--------|-------------|----------|
-| `COMMERCETOOLS_PROJECT_KEY` | CommerceTools project key | Optional |
-| `COMMERCETOOLS_CLIENT_ID` | CommerceTools client ID | Optional |
-| `COMMERCETOOLS_CLIENT_SECRET` | CommerceTools client secret | Optional |
+| `COMMERCETOOLS_PROJECT_KEY` | CommerceTools project key | Optional* |
+| `COMMERCETOOLS_CLIENT_ID` | CommerceTools client ID | Optional* |
+| `COMMERCETOOLS_CLIENT_SECRET` | CommerceTools client secret | Optional* |
+
+*Required for E2E tests with real CommerceTools API. See [E2E Testing Workflow](#e2e-testing-workflow) below.
 
 For complete setup instructions, see:
 - [backend/docs/GITHUB_ACTIONS_VARIABLES.md](backend/docs/GITHUB_ACTIONS_VARIABLES.md)
 - [docs/COMMERCETOOLS_SETUP.md](docs/COMMERCETOOLS_SETUP.md)
+- [.github/workflows/README.md](.github/workflows/README.md) - CI/CD workflows documentation
 
 ## 🧪 Testing
 
@@ -228,8 +231,39 @@ Both services include health check endpoints:
 ### API Testing
 
 Backend API endpoints:
-- `GET /api/ratings` - List ratings
-- `POST /api/ratings` - Create rating
+- `GET /api/products/:productId/rating` - Get product rating
+- `GET /api/products/:productId/reviews` - Get product reviews
+- `POST /api/products/:productId/reviews` - Create review
+
+### E2E Testing Workflow
+
+The repository includes automated E2E testing with CommerceTools API integration:
+
+**Workflow**: `.github/workflows/e2e-tests.yml`
+
+**Triggers**:
+- Automatically on every pull request
+- On push to main branch
+- Can be manually triggered
+
+**What it tests**:
+- ✅ Health check and API connectivity
+- ✅ Product rating fetch and aggregation
+- ✅ Product reviews with pagination, filtering, sorting
+- ✅ Review creation and validation
+- ✅ Duplicate review prevention
+- ✅ Error handling scenarios
+
+**Requirements**:
+- CommerceTools secrets must be configured in repository settings
+- Tests automatically skip if secrets are not available
+- See [CI/CD Workflows README](.github/workflows/README.md) for setup instructions
+
+**Running Locally**:
+```bash
+cd backend
+npm run test:e2e  # Requires CommerceTools credentials
+```
 
 ### Manual Testing
 
