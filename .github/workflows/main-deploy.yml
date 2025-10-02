@@ -40,11 +40,7 @@ jobs:
     - name: Lint backend
       run: |
         cd backend
-        if npm run lint --silent 2>&1 | grep -q "Missing script"; then
-          echo "⚠️  Linting not configured, skipping"
-        else
-          npm run lint
-        fi
+        npm run lint --if-present
 
     - name: Test backend
       run: |
@@ -59,11 +55,7 @@ jobs:
     - name: Lint frontend
       run: |
         cd frontend
-        if npm run lint --silent 2>&1 | grep -q "Missing script"; then
-          echo "⚠️  Linting not configured, skipping"
-        else
-          npm run lint
-        fi
+        npm run lint --if-present
 
     - name: Test frontend
       run: |
