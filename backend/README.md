@@ -238,6 +238,7 @@ Response:
 ```bash
 POST /api/products/:productId/reviews
 Content-Type: application/json
+Authorization: Bearer <your-jwt-token>
 
 {
   "rating": 5,
@@ -246,7 +247,11 @@ Content-Type: application/json
 }
 ```
 
-**Note**: For POC purposes, authentication is disabled. The backend uses mock authentication to allow anonymous review submissions. For production deployment, replace `mockAuth` with `authenticate` middleware in `src/routes/review.routes.ts`.
+**Note**: Authentication behavior is environment-aware:
+- **Development mode** (`NODE_ENV=development`): Uses mock authentication for easy testing (no token required)
+- **Test/Production mode** (`NODE_ENV=test` or `NODE_ENV=production`): Requires valid JWT token in Authorization header
+
+To get a JWT token for testing, use the `/api/auth/login` endpoint.
 
 Response:
 ```json
