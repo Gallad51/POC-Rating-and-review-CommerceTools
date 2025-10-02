@@ -198,12 +198,18 @@ class CommerceToolsService {
     }
 
     try {
+      // Build where clause - handle both UUID and key formats
+      // CommerceTools Reviews API uses target references with typeId and id (UUID) or key
+      const whereClause = this.isUUID(productId)
+        ? `target(typeId="product" and id="${productId}")`
+        : `key="${productId}"`; // Query by review key if productId is not UUID
+      
       // Fetch reviews from CommerceTools API
       const response = await this.apiRoot
         .reviews()
         .get({
           queryArgs: {
-            where: `target(id="${productId}")`,
+            where: whereClause,
             limit: 500, // Get all reviews for rating calculation
           },
         })
@@ -311,6 +317,14 @@ class CommerceToolsService {
   }
 
   /**
+   * Check if a string is a valid UUID
+   */
+  private isUUID(str: string): boolean {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(str);
+  }
+
+  /**
    * Get paginated reviews from CommerceTools API
    */
   private async getProductReviewsFromApi(
@@ -325,7 +339,11 @@ class CommerceToolsService {
 
     try {
       const offset = (page - 1) * limit;
-      const whereConditions: string[] = [`target(id="${productId}")`];
+      // Build where clause - handle both UUID and key formats
+      const targetClause = this.isUUID(productId)
+        ? `target(typeId="product" and id="${productId}")`
+        : `key="${productId}"`; // Query by review key if productId is not UUID
+      const whereConditions: string[] = [targetClause];
 
       // Apply rating filter
       if (filters?.rating) {
@@ -461,14 +479,22 @@ class CommerceToolsService {
 
     try {
       // Create review draft
+      // Build target reference based on productId format (UUID vs key)
+      const target = this.isUUID(reviewInput.productId)
+        ? {
+            typeId: 'product' as const,
+            id: reviewInput.productId,
+          }
+        : {
+            typeId: 'product' as const,
+            key: reviewInput.productId,
+          };
+
       const reviewDraft = {
         authorName: reviewInput.authorName || 'Anonymous',
         text: reviewInput.comment,
         rating: reviewInput.rating,
-        target: {
-          typeId: 'product' as const,
-          id: reviewInput.productId,
-        },
+        target,
         key: `review-${userId}-${reviewInput.productId}-${Date.now()}`,
         uniquenessValue: userId, // Use userId to prevent duplicates
       };
