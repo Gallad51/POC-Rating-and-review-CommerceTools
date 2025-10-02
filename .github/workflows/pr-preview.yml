@@ -93,6 +93,7 @@ jobs:
       run: |
         cd backend
         npm ci
+        npm run lint --if-present
         npm run build
         npm test || echo "No tests configured for backend"
 
@@ -100,6 +101,7 @@ jobs:
       run: |
         cd frontend
         npm ci
+        npm run lint --if-present
         npm run build
         npm test || echo "No tests configured for frontend"
 
