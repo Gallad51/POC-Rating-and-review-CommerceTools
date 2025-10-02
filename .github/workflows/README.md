@@ -42,7 +42,30 @@ This directory contains CI/CD workflows for the POC Rating and Review project.
 - Destroys Terraform state
 - Posts cleanup confirmation as PR comment
 
-### 3. E2E Tests with CommerceTools (`e2e-tests.yml`) ⭐ NEW
+### 3. Main Environment Deploy (`main-deploy.yml`) ⭐ NEW
+
+**Trigger**: 
+- Push to `main` branch
+- Manual workflow dispatch
+
+**Purpose**: Deploys both backend and frontend to the main (production) environment on every commit to main.
+
+**What it does**:
+- **Lint and Test Phase**: Runs linting and tests for both backend and frontend (must pass to proceed)
+- **Build and Deploy Phase**: Builds Docker images, deploys via Terraform to GCP
+- Uses dedicated Terraform state: `terraform/state/main`
+- Deploys with `environment=main` identifier
+- Tags images with commit SHA and `main-latest`
+- Runs health checks after deployment
+- Uses the same GCP project and credentials as PR previews
+
+**Deployment Safety**:
+- Two-job workflow ensures tests pass before deployment
+- Deployment fails if linting or tests fail
+- No concurrent deployments to main environment
+- Health checks validate successful deployment
+
+### 4. E2E Tests with CommerceTools (`e2e-tests.yml`)
 
 **Trigger**: 
 - Pull requests to `main` branch (opened, synchronize, reopened)
@@ -176,18 +199,19 @@ This is useful for:
 
 ```
 .github/workflows/
-├── pr-preview.yml       # Preview deployment
+├── pr-preview.yml       # Preview deployment (PRs)
 ├── pr-cleanup.yml       # Cleanup on PR close
-└── e2e-tests.yml        # E2E tests with CommerceTools
+├── e2e-tests.yml        # E2E tests with CommerceTools
+└── main-deploy.yml      # Main environment deployment
 ```
 
 ## Environment Strategy
 
-| Environment | CommerceTools Mode | Secrets Used | Use Case |
-|-------------|-------------------|--------------|----------|
-| **Preview (PR)** | Real API (enabled) | All CT secrets + defaults | Full integration testing |
-| **E2E Tests** | Real API | Repository secrets | Integration testing |
-| **Production** | Real API | Secret Manager | Live deployment |
+| Environment | CommerceTools Mode | Secrets Used | Terraform State | Use Case |
+|-------------|-------------------|--------------|-----------------|----------|
+| **Preview (PR)** | Real API (enabled) | All CT secrets + defaults | `terraform/state/pr-{NUMBER}` | Full integration testing |
+| **Main** | Real API (enabled) | All CT secrets + defaults | `terraform/state/main` | Production/staging deployment |
+| **E2E Tests** | Real API | Repository secrets | N/A | Integration testing |
 
 ## Monitoring
 
