@@ -18,49 +18,49 @@ provider "google" {
 # Enable required APIs
 resource "google_project_service" "cloud_run" {
   service = "run.googleapis.com"
-  
+
   disable_dependent_services = false
   disable_on_destroy         = false
 }
 
 resource "google_project_service" "secret_manager" {
   service = "secretmanager.googleapis.com"
-  
+
   disable_dependent_services = false
   disable_on_destroy         = false
 }
 
 resource "google_project_service" "container_registry" {
   service = "containerregistry.googleapis.com"
-  
+
   disable_dependent_services = false
   disable_on_destroy         = false
 }
 
 resource "google_project_service" "artifact_registry" {
   service = "artifactregistry.googleapis.com"
-  
+
   disable_dependent_services = false
   disable_on_destroy         = false
 }
 
 resource "google_project_service" "cloud_build" {
   service = "cloudbuild.googleapis.com"
-  
+
   disable_dependent_services = false
   disable_on_destroy         = false
 }
 
 resource "google_project_service" "iam" {
   service = "iam.googleapis.com"
-  
+
   disable_dependent_services = false
   disable_on_destroy         = false
 }
 
 resource "google_project_service" "service_usage" {
   service = "serviceusage.googleapis.com"
-  
+
   disable_dependent_services = false
   disable_on_destroy         = false
 }
@@ -85,29 +85,29 @@ resource "google_cloud_run_service" "frontend" {
   template {
     metadata {
       annotations = {
-        "autoscaling.knative.dev/minScale" = "0"
-        "autoscaling.knative.dev/maxScale" = "10" 
+        "autoscaling.knative.dev/minScale"  = "0"
+        "autoscaling.knative.dev/maxScale"  = "10"
         "run.googleapis.com/cpu-throttling" = "true"
       }
     }
-    
+
     spec {
       container_concurrency = 80
-      timeout_seconds      = 300
-      
+      timeout_seconds       = 300
+
       containers {
         image = var.frontend_image
-        
+
         env {
-          name  = "NODE_ENV" 
+          name  = "NODE_ENV"
           value = var.environment
         }
-        
+
         env {
           name  = "BACKEND_URL"
           value = google_cloud_run_service.backend_api.status[0].url
         }
-        
+
         resources {
           limits = {
             cpu    = "1000m"
@@ -117,7 +117,7 @@ resource "google_cloud_run_service" "frontend" {
       }
     }
   }
-  
+
   traffic {
     percent         = 100
     latest_revision = true

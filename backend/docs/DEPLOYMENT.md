@@ -230,21 +230,43 @@ terraform output
 
 ### Terraform State Management
 
-**Important**: Use remote state for production:
+**Important**: The CI/CD workflows now use remote state stored in GCS for all deployments.
 
-```hcl
-# infra/backend.tf (add this block)
-terraform {
-  backend "gcs" {
-    bucket = "your-terraform-state-bucket"
-    prefix = "terraform/state"
-  }
-}
+#### Automated State Management (CI/CD)
+
+The GitHub Actions workflows automatically configure GCS backend for Terraform state:
+- Each PR gets its own state folder: `gs://bucket/terraform/state/pr-{NUMBER}/`
+- State is persisted across workflow runs (commits to the same PR)
+- State is automatically cleaned up when PR is closed
+
+**Setup Required:**
+1. Create a GCS bucket for Terraform state (see [GITHUB_ACTIONS_VARIABLES.md](./GITHUB_ACTIONS_VARIABLES.md#terraform-state-bucket-setup))
+2. Configure `TF_STATE_BUCKET` secret or variable in GitHub repository settings
+
+#### Manual State Management (Local Development)
+
+For local Terraform operations, initialize with backend configuration:
+
+```bash
+cd infra
+
+# Initialize with remote state
+terraform init \
+  -backend-config="bucket=your-terraform-state-bucket" \
+  -backend-config="prefix=terraform/state/local"
+
+# Or create backend-config.hcl
+cat > backend-config.hcl <<EOF
+bucket = "your-terraform-state-bucket"
+prefix = "terraform/state/local"
+EOF
+
+terraform init -backend-config=backend-config.hcl
 ```
 
-Create the bucket:
+Create the bucket if it doesn't exist:
 ```bash
-gsutil mb gs://your-terraform-state-bucket
+gsutil mb -p your-project-id -l europe-west1 gs://your-terraform-state-bucket
 gsutil versioning set on gs://your-terraform-state-bucket
 ```
 
@@ -748,12 +770,20 @@ terraform apply
 **Problem**: The PR cleanup workflow runs successfully after a PR is merged, but Cloud Run services are not deleted.
 
 **Root Cause**: 
-Terraform uses local state by default, which is not persisted between GitHub Actions workflow runs. When the cleanup workflow runs `terraform init`, it creates a new empty state, so `terraform destroy` has no knowledge of the resources that were created during preview deployment.
+Previously, Terraform used local state by default, which was not persisted between GitHub Actions workflow runs. When the cleanup workflow ran `terraform init`, it created a new empty state, so `terraform destroy` had no knowledge of the resources that were created during preview deployment.
 
 **Solution**:
-This issue has been fixed by adding a fallback cleanup step that directly deletes Cloud Run services using `gcloud` commands. The cleanup workflow now:
-1. Attempts `terraform destroy` (in case state exists)
-2. Falls back to direct `gcloud run services delete` commands to ensure services are removed
+This issue has been **permanently fixed** by implementing GCS backend for Terraform state storage:
+1. Each PR now stores its state in GCS: `gs://bucket/terraform/state/pr-{NUMBER}/`
+2. State persists across all workflow runs for the same PR
+3. `terraform destroy` can now properly clean up all resources
+4. State is automatically deleted after cleanup completes
+
+**Fallback**: The cleanup workflow still includes direct `gcloud` commands as a safety measure.
+
+**Setup Required**:
+- Configure `TF_STATE_BUCKET` secret/variable in GitHub repository settings
+- See [GITHUB_ACTIONS_VARIABLES.md](./GITHUB_ACTIONS_VARIABLES.md#terraform-state-bucket-setup) for setup instructions
 
 If you need to manually clean up services:
 ```bash
@@ -766,17 +796,6 @@ gcloud run services delete SERVICE_NAME --region=$REGION --quiet
 # Example: Delete PR-specific services
 gcloud run services delete ratings-reviews-backend-pr-11-feature --region=europe-west1 --quiet
 gcloud run services delete ratings-reviews-frontend-pr-11-feature --region=europe-west1 --quiet
-```
-
-**Future Improvement**:
-For production environments, consider configuring a Terraform backend (e.g., GCS) to persist state:
-```hcl
-terraform {
-  backend "gcs" {
-    bucket = "your-terraform-state-bucket"
-    prefix = "terraform/state"
-  }
-}
 ```
 
 ### Debug Checklist

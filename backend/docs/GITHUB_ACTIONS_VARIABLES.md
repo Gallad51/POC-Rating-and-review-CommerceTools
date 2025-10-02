@@ -21,6 +21,47 @@ Configure in: **Settings > Secrets and variables > Actions > Secrets**
 |-------------|-------------|---------|-----------------|
 | `GCP_SA_KEY` | Service account JSON key for GCP authentication | `{"type": "service_account"...}` | [See GCP Setup](#gcp-service-account-setup) |
 | `GCP_PROJECT_ID` | Google Cloud Project ID | `ratings-reviews-poc` | GCP Console > Project Info |
+| `TF_STATE_BUCKET` | GCS bucket name for Terraform state storage | `my-terraform-state-bucket` | [See Terraform State Setup](#terraform-state-bucket-setup) |
+
+### Terraform State Bucket Setup
+
+The Terraform state bucket is used to persist infrastructure state across workflow runs, ensuring that each PR maintains its state between commits.
+
+**Quick Setup with Script:**
+```bash
+# Run the automated setup script
+./scripts/setup-terraform-state-bucket.sh your-project-id
+```
+
+**Manual Setup:**
+
+1. **Create GCS Bucket for Terraform State:**
+   ```bash
+   # Create the bucket (replace with your preferred name)
+   gsutil mb -p your-project-id -l europe-west1 gs://your-terraform-state-bucket
+   
+   # Enable versioning for state recovery
+   gsutil versioning set on gs://your-terraform-state-bucket
+   
+   # Set bucket to uniform access
+   gsutil uniformbucketlevelaccess set on gs://your-terraform-state-bucket
+   ```
+
+2. **Grant Service Account Access:**
+   ```bash
+   # Grant the GitHub Actions service account access to the bucket
+   gsutil iam ch serviceAccount:github-actions@your-project-id.iam.gserviceaccount.com:objectAdmin \
+     gs://your-terraform-state-bucket
+   ```
+
+3. **Add to GitHub Secrets:**
+   - Go to GitHub repository > Settings > Secrets and variables > Actions
+   - Click "New repository secret"
+   - Name: `TF_STATE_BUCKET`
+   - Value: Your bucket name (e.g., `my-terraform-state-bucket`)
+   - Click "Add secret"
+
+> **Note**: Alternatively, you can set `TF_STATE_BUCKET` as a Repository Variable instead of a Secret since it's not sensitive information.
 
 ### GCP Service Account Setup
 
@@ -106,12 +147,15 @@ Configure in: **Settings > Secrets and variables > Actions > Variables**
 | Variable Name | Description | Default | Example |
 |---------------|-------------|---------|---------|
 | `GCP_REGION` | GCP region for deployments | `europe-west1` | `us-central1` |
+| `TF_STATE_BUCKET` | GCS bucket for Terraform state (alternative to secret) | None | `my-terraform-state-bucket` |
 | `TF_VAR_backend_memory` | Backend memory limit | `512Mi` | `1Gi` |
 | `TF_VAR_backend_cpu` | Backend CPU limit | `1000m` | `2000m` |
 | `TF_VAR_backend_max_instances` | Max backend instances | `10` | `100` |
 | `TF_VAR_rate_limit_max_requests` | Rate limit per minute | `10` | `100` |
 | `TF_VAR_log_level` | Logging level | `info` | `debug`, `warn`, `error` |
 | `TF_VAR_cors_origin` | Allowed CORS origins | `*` | `https://your-domain.com` |
+
+> **Note**: `TF_STATE_BUCKET` can be configured as either a Secret or a Variable. If both are set, the Secret takes precedence.
 
 ## Environment-Specific Configuration
 
@@ -122,10 +166,12 @@ Configure in: **Settings > Secrets and variables > Actions > Variables**
 - `create_backend_secrets`: `false` (uses defaults)
 - `enable_commercetools`: `false` (uses mock service)
 - `backend_image`: `gcr.io/$PROJECT_ID/backend:pr-$PR_NUMBER`
+- `terraform_state_prefix`: `terraform/state/pr-$PR_NUMBER` (auto-configured per PR)
 
 **Required Secrets:**
 - `GCP_SA_KEY` ✅
 - `GCP_PROJECT_ID` ✅
+- `TF_STATE_BUCKET` ✅
 
 **Optional Production Secrets:**
 - Not required ❌
@@ -137,10 +183,12 @@ Configure in: **Settings > Secrets and variables > Actions > Variables**
 - `create_backend_secrets`: `true`
 - `enable_commercetools`: `true`
 - `backend_image`: `gcr.io/$PROJECT_ID/backend:$TAG`
+- `terraform_state_prefix`: `terraform/state/prod` (recommended)
 
 **Required Secrets:**
 - `GCP_SA_KEY` ✅
 - `GCP_PROJECT_ID` ✅
+- `TF_STATE_BUCKET` ✅
 - `TF_VAR_jwt_secret` ✅
 - `TF_VAR_ctp_project_key` ✅
 - `TF_VAR_ctp_client_id` ✅
@@ -180,6 +228,21 @@ gcloud services enable run.googleapis.com \
    - GitHub: Repository > Settings > Secrets > New secret
    - Name: `GCP_PROJECT_ID`
    - Value: Your GCP project ID (e.g., `ratings-reviews-poc`)
+
+3. **TF_STATE_BUCKET**
+   ```bash
+   # Create the bucket first
+   gsutil mb -p your-project-id -l europe-west1 gs://your-terraform-state-bucket
+   gsutil versioning set on gs://your-terraform-state-bucket
+   
+   # Grant service account access
+   gsutil iam ch serviceAccount:github-actions@your-project-id.iam.gserviceaccount.com:objectAdmin \
+     gs://your-terraform-state-bucket
+   ```
+   - GitHub: Repository > Settings > Secrets > New secret
+   - Name: `TF_STATE_BUCKET`
+   - Value: Your bucket name (e.g., `my-terraform-state-bucket`)
+   - **Alternative**: Can be set as a Repository Variable instead of Secret
 
 #### Optional for Production
 

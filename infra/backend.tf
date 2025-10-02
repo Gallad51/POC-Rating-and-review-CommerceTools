@@ -134,9 +134,9 @@ resource "google_cloud_run_service" "backend_api" {
   template {
     metadata {
       annotations = {
-        "autoscaling.knative.dev/minScale"    = var.backend_min_instances
-        "autoscaling.knative.dev/maxScale"    = var.backend_max_instances
-        "run.googleapis.com/cpu-throttling"   = "true"
+        "autoscaling.knative.dev/minScale"  = var.backend_min_instances
+        "autoscaling.knative.dev/maxScale"  = var.backend_max_instances
+        "run.googleapis.com/cpu-throttling" = "true"
       }
     }
 
