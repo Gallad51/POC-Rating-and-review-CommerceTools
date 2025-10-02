@@ -20,6 +20,9 @@ jobs:
       pull-requests: write
 
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
     - name: Generate PR environment name
       id: env
       run: |
@@ -47,9 +50,6 @@ jobs:
       uses: hashicorp/setup-terraform@v3
       with:
         terraform_version: 1.6.0
-
-    - name: Checkout code
-      uses: actions/checkout@v4
 
     - name: Terraform Init
       run: |
