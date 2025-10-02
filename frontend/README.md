@@ -79,6 +79,31 @@ Opens interactive demo at `http://localhost:5173`
 ```bash
 npm run build
 ```
+Builds the Vue.js demo application to `dist/`.
+
+#### For Library Distribution
+```bash
+npm run build:lib
+```
+Creates ES and UMD modules in `dist/` for NPM distribution.
+
+### Backend Integration
+
+The demo server proxies API requests to the backend service:
+
+- Frontend requests: `/api/products/:productId/rating`
+- Backend URL configured via `BACKEND_URL` environment variable
+- Server proxies to: `${BACKEND_URL}/api/products/:productId/rating`
+
+**Environment Variables**:
+- `BACKEND_URL`: Backend service URL (e.g., `https://backend-service.run.app`)
+- `PORT`: Server port (default: 8080)
+
+**API Endpoints** (proxied):
+- `GET /api/products/:productId/rating` - Get rating summary
+- `GET /api/products/:productId/reviews` - Get paginated reviews
+- `POST /api/products/:productId/reviews` - Submit new review
+```
 Builds the Vue.js demo application to `dist/` directory.
 
 #### For NPM Package (Library Mode)

@@ -10,6 +10,9 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8080';
 
+// Parse JSON bodies for POST requests
+app.use(express.json());
+
 // Health check endpoint (required for Cloud Run)
 app.get('/health', (req, res) => {
   res.status(200).json({
@@ -23,14 +26,15 @@ app.get('/health', (req, res) => {
 // Proxy API requests to backend
 app.use('/api', async (req, res) => {
   try {
-    const backendUrl = `${BACKEND_URL}${req.url}`;
-    console.log(`Proxying request to: ${backendUrl}`);
+    // Build the backend URL with the full API path
+    const backendUrl = `${BACKEND_URL}/api${req.url}`;
+    console.log(`Proxying request: ${req.method} ${req.originalUrl} -> ${backendUrl}`);
     
     const response = await fetch(backendUrl, {
       method: req.method,
       headers: {
-        ...req.headers,
-        host: new URL(BACKEND_URL).host,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
       body: req.method !== 'GET' && req.method !== 'HEAD' ? JSON.stringify(req.body) : undefined,
     });
@@ -48,6 +52,7 @@ app.use('/api', async (req, res) => {
     res.status(502).json({
       error: 'Bad Gateway',
       message: 'Failed to reach backend service',
+      details: error.message,
     });
   }
 });
