@@ -19,6 +19,7 @@ This POC uses a **monorepo structure** with the following components:
 
 - **Backend**: Node.js 18 + TypeScript + Express
 - **Frontend**: Vanilla HTML/CSS/JS (static serving)
+- **Integration**: CommerceTools API (with mock mode for POC)
 - **Infrastructure**: Google Cloud Run (backend & frontend)
 - **CI/CD**: GitHub Actions
 - **IaC**: Terraform
@@ -51,14 +52,24 @@ This POC uses a **monorepo structure** with the following components:
    cd POC-Rating-and-review-CommerceTools
    ```
 
-2. **Backend development**:
+2. **Configure CommerceTools (Optional)**:
+   
+   By default, the application uses mock data. To integrate with CommerceTools:
+   - See **[CommerceTools Setup Guide](docs/COMMERCETOOLS_SETUP.md)** for detailed instructions
+   - Quick setup:
+     ```bash
+     cp .env.example .env
+     # Edit .env with your CommerceTools credentials
+     ```
+
+3. **Backend development**:
    ```bash
    cd backend
    npm install
    npm run dev  # Starts on http://localhost:8080
    ```
 
-3. **Frontend development**:
+4. **Frontend development**:
    ```bash
    cd frontend
    npm install
@@ -147,12 +158,37 @@ POC-Rating-and-review-CommerceTools/
 
 ## 🔧 Configuration
 
+### CommerceTools Integration
+
+This project integrates with CommerceTools for product ratings and reviews management.
+
+📖 **[Complete CommerceTools Setup Guide](docs/COMMERCETOOLS_SETUP.md)**
+
+The guide covers:
+- Getting a free CommerceTools trial account
+- Creating API credentials
+- Configuring environment variables
+- Testing the integration
+- Troubleshooting common issues
+
+**Quick Reference**:
+```bash
+# Required environment variables (see docs/COMMERCETOOLS_SETUP.md)
+CTP_PROJECT_KEY=your-project-key
+CTP_CLIENT_ID=your-client-id
+CTP_CLIENT_SECRET=your-client-secret
+```
+
 ### Environment Variables
 
 #### Backend Service
 - `PORT`: Server port (default: 8080)
 - `NODE_ENV`: Environment (dev/preview/prod)
-- `API_KEY`: External API key (from Secret Manager)
+- `CTP_PROJECT_KEY`: CommerceTools project key (required for production)
+- `CTP_CLIENT_ID`: CommerceTools client ID (required for production)
+- `CTP_CLIENT_SECRET`: CommerceTools client secret (required for production)
+
+See [.env.example](.env.example) and [docs/COMMERCETOOLS_SETUP.md](docs/COMMERCETOOLS_SETUP.md) for complete configuration details.
 
 #### Frontend Service  
 - `PORT`: Server port (default: 8080)
@@ -169,7 +205,17 @@ Required secrets for CI/CD:
 | `GCP_PROJECT_ID` | Google Cloud Project ID | ✅ Yes |
 | `TF_STATE_BUCKET` | GCS bucket for Terraform state | ✅ Yes |
 
-For complete setup instructions, see [backend/docs/GITHUB_ACTIONS_VARIABLES.md](backend/docs/GITHUB_ACTIONS_VARIABLES.md).
+Optional secrets for CommerceTools integration:
+
+| Secret | Description | Required |
+|--------|-------------|----------|
+| `COMMERCETOOLS_PROJECT_KEY` | CommerceTools project key | Optional |
+| `COMMERCETOOLS_CLIENT_ID` | CommerceTools client ID | Optional |
+| `COMMERCETOOLS_CLIENT_SECRET` | CommerceTools client secret | Optional |
+
+For complete setup instructions, see:
+- [backend/docs/GITHUB_ACTIONS_VARIABLES.md](backend/docs/GITHUB_ACTIONS_VARIABLES.md)
+- [docs/COMMERCETOOLS_SETUP.md](docs/COMMERCETOOLS_SETUP.md)
 
 ## 🧪 Testing
 
@@ -303,6 +349,8 @@ For production deployment, consider:
 
 ## 📖 Additional Documentation
 
+### Core Documentation
+- **[CommerceTools Setup Guide](./docs/COMMERCETOOLS_SETUP.md)** - Complete integration guide with trial account setup
 - [Infrastructure Documentation](./infra/README.md)
 - [Backend API Documentation](./backend/README.md)
 - **[Backend Deployment Guide](./backend/docs/DEPLOYMENT.md)** - Complete CI/CD and deployment instructions

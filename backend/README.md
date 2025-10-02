@@ -106,6 +106,8 @@ docker run -p 8080:8080 \
   ratings-backend
 ```
 
+> **Note**: For CommerceTools credentials setup, see [../docs/COMMERCETOOLS_SETUP.md](../docs/COMMERCETOOLS_SETUP.md)
+
 ## 📖 API Documentation
 
 Interactive API documentation is available at `/api-docs` when the server is running.
@@ -415,6 +417,18 @@ All files                  |   87.89 |    71.56 |   85.18 |   87.41
 
 ## ⚙️ Configuration
 
+### CommerceTools Integration
+
+This backend integrates with CommerceTools API for product ratings and reviews.
+
+📖 **[Complete CommerceTools Setup Guide](../docs/COMMERCETOOLS_SETUP.md)**
+
+The guide provides:
+- Step-by-step trial account creation
+- API client setup with proper scopes
+- Credential configuration options
+- Testing and troubleshooting
+
 ### Environment Variables
 
 Create a `.env` file in the backend directory:
@@ -446,6 +460,8 @@ CORS_ORIGIN=http://localhost:3000,http://localhost:8080
 # Logging
 LOG_LEVEL=info
 ```
+
+**Quick start**: `cp .env.example .env` and edit with your credentials.
 
 ### Configuration Object
 
@@ -780,6 +796,12 @@ app.use((req, res, next) => {
 See [CONTRIBUTING.md](../CONTRIBUTING.md) for development guidelines.
 
 ## 📚 Additional Documentation
+
+- **[CommerceTools Setup Guide](../docs/COMMERCETOOLS_SETUP.md)** - Integration guide
+  - Trial account creation
+  - API client setup
+  - Configuration options
+  - Troubleshooting
 
 - **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Complete deployment guide
   - Prerequisites and GCP setup
