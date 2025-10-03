@@ -382,6 +382,8 @@ defineExpose({
   font-size: 1rem;
   position: relative;
   display: inline-block;
+  line-height: 1;
+  vertical-align: middle;
 }
 
 .rating-compact__star--full {
@@ -389,12 +391,14 @@ defineExpose({
 }
 
 .rating-compact__star--half {
-  color: var(--star-color-half, #ffc107);
   position: relative;
 }
 
 .rating-compact__star-base {
   color: var(--star-color-empty, #e0e0e0);
+  display: inline-block;
+  line-height: 1;
+  vertical-align: middle;
 }
 
 .rating-compact__star-overlay {
@@ -404,6 +408,8 @@ defineExpose({
   width: 50%;
   overflow: hidden;
   color: var(--star-color-half, #ffc107);
+  line-height: 1;
+  vertical-align: middle;
 }
 
 .rating-compact__star--empty {
