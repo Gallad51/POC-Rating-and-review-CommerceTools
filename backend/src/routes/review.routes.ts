@@ -10,7 +10,7 @@ import {
   createReview,
   reviewHealthCheck,
 } from '../controllers/review.controller';
-import { authenticate, mockAuth } from '../middleware/auth.middleware';
+import { optionalAuth } from '../middleware/auth.middleware';
 import { apiRateLimiter, writeRateLimiter, userRateLimiter } from '../middleware/ratelimit.middleware';
 import {
   validateProductId,
@@ -18,12 +18,8 @@ import {
   validateReviewFilters,
   validateCreateReview,
 } from '../middleware/validation.middleware';
-import { config } from '../config';
 
 const router = Router();
-
-// Use real authentication in test/production, mock auth only in development
-const authMiddleware = config.nodeEnv === 'development' ? mockAuth : authenticate;
 
 /**
  * @route   GET /api/reviews/health
@@ -67,17 +63,17 @@ router.get(
 /**
  * @route   POST /api/products/:productId/reviews
  * @desc    Create a new review for a product
- * @access  Protected (requires authentication in test/production, uses mock auth in development)
+ * @access  Public (authentication optional)
  * @body    rating - Rating value (1-5)
  * @body    comment - Review comment (optional, max 1000 chars)
  * @body    authorName - Author display name (optional, max 100 chars)
- * @note    Authentication mode is environment-based: mock in development, real in test/production
+ * @note    Authentication is optional for POC. Anonymous reviews are allowed.
  */
 router.post(
   '/:productId/reviews',
   writeRateLimiter,
   userRateLimiter,
-  authMiddleware, // Environment-aware: mockAuth in development, authenticate in test/production
+  optionalAuth, // Optional authentication - allows anonymous reviews
   validateProductId,
   validateCreateReview,
   createReview

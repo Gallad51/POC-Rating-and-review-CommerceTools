@@ -63,19 +63,18 @@ export const getProductReviews = asyncHandler(
 /**
  * Create a new review
  * POST /api/products/:productId/reviews
- * Requires authentication
+ * Authentication is optional for POC
  */
 export const createReview = asyncHandler(
   async (req: Request, res: Response) => {
     const { productId } = req.params;
     const { rating, comment, authorName } = req.body;
-    const userId = req.user?.userId;
+    
+    // Use authenticated userId if available, otherwise generate anonymous ID
+    // Anonymous IDs are based on IP + timestamp for basic duplicate prevention
+    const userId = req.user?.userId || `anonymous-${req.ip}-${Date.now()}`;
 
-    if (!userId) {
-      throw new AppError('User not authenticated', 401);
-    }
-
-    logger.info('Creating review', { productId, userId });
+    logger.info('Creating review', { productId, userId, isAnonymous: !req.user });
 
     const review = await commerceToolsService.createReview(
       {
@@ -93,6 +92,7 @@ export const createReview = asyncHandler(
       userId,
       rating,
       ip: req.ip,
+      isAnonymous: !req.user,
     });
 
     res.status(201).json({
