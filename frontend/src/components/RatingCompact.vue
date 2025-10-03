@@ -398,7 +398,6 @@ defineExpose({
   color: var(--star-color-empty, #e0e0e0);
   display: inline-block;
   line-height: 1;
-  vertical-align: middle;
 }
 
 .rating-compact__star-overlay {
@@ -409,7 +408,6 @@ defineExpose({
   overflow: hidden;
   color: var(--star-color-half, #ffc107);
   line-height: 1;
-  vertical-align: middle;
 }
 
 .rating-compact__star--empty {
