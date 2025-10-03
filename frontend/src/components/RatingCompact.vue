@@ -304,7 +304,10 @@ defineExpose({
 }
 
 .rating-compact--dark {
+  background-color: #2d3748;
   color: var(--rating-text-color-dark, #fff);
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
 }
 
 .rating-compact--dark .rating-compact__star--full {
@@ -316,11 +319,14 @@ defineExpose({
 }
 
 .rating-compact--primary {
-  color: var(--rating-primary-color, #007bff);
+  background-color: #e3f2fd;
+  color: var(--rating-primary-color, #1976d2);
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
 }
 
 .rating-compact--primary .rating-compact__star--full {
-  color: var(--rating-primary-color, #007bff);
+  color: var(--rating-primary-color, #1976d2);
 }
 
 .rating-compact--secondary {
@@ -384,6 +390,10 @@ defineExpose({
   display: inline-block;
   line-height: 1;
   vertical-align: middle;
+  font-family: Arial, sans-serif;
+  font-weight: normal;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 .rating-compact__star--full {
