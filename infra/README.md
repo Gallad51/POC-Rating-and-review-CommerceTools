@@ -463,16 +463,22 @@ For production deployment, add:
    
    **Symptom**: `terraform apply` hangs indefinitely during Cloud Run service creation, even though the services are successfully created in GCP.
    
-   **Cause**: This was caused by conditional resource dependencies in the `depends_on` clause. When `create_backend_secrets=false`, Terraform would wait for secret resources that would never be created.
+   **Cause**: The Cloud Run service references secrets in environment variables but wasn't explicitly depending on them being created first.
    
-   **Solution**: The issue has been fixed. The Cloud Run services now only depend on API services that are always created:
+   **Solution**: The issue has been fixed. The Cloud Run service now properly depends on both API services and secret resources:
    ```hcl
    depends_on = [
      google_project_service.cloud_run,
      google_project_service.container_registry,
-     google_project_service.artifact_registry
+     google_project_service.artifact_registry,
+     google_secret_manager_secret_version.jwt_secret,
+     google_secret_manager_secret_version.ctp_project_key,
+     google_secret_manager_secret_version.ctp_client_id,
+     google_secret_manager_secret_version.ctp_client_secret
    ]
    ```
+   
+   Terraform automatically handles the conditional nature - when `create_backend_secrets=false`, the secret resources don't exist and dependencies are ignored.
    
    If you still experience issues, ensure you're using the latest version of the Terraform configuration.
 
