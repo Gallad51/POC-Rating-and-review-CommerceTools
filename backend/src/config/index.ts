@@ -7,10 +7,34 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+/**
+ * Parse trust proxy configuration from environment variable
+ * Supports: 'true', 'false', numbers, or IP/CIDR strings
+ */
+function parseTrustProxy(value: string | undefined): boolean | number | string {
+  if (!value) return 1; // Default: trust first hop (suitable for Cloud Run)
+  
+  // Handle boolean strings
+  if (value.toLowerCase() === 'true') return true;
+  if (value.toLowerCase() === 'false') return false;
+  
+  // Check if it's a pure number (no dots, commas, or slashes for IP/CIDR)
+  if (/^\d+$/.test(value)) {
+    return parseInt(value, 10);
+  }
+  
+  // Return as string for IP/CIDR configuration
+  return value;
+}
+
 export const config = {
   // Server configuration
   port: parseInt(process.env.PORT || '8080', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
+  // Trust proxy configuration for reverse proxies (Cloud Run, nginx, etc.)
+  // Default: trust first proxy hop (1) - suitable for Cloud Run
+  // Options: true (trust all), false (trust none), number (trust n hops), or string (IP/CIDR)
+  trustProxy: parseTrustProxy(process.env.TRUST_PROXY),
   
   // CommerceTools configuration
   commerceTools: {

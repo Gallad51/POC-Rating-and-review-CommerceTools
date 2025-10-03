@@ -25,6 +25,10 @@ try {
 
 const app = express();
 
+// Configure trust proxy for Cloud Run and other reverse proxies
+// This is required for express-rate-limit to correctly identify users
+app.set('trust proxy', config.trustProxy);
+
 // Security middleware
 app.use(helmet());
 
