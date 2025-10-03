@@ -144,6 +144,12 @@ variable "log_level" {
   default     = "info"
 }
 
+variable "trust_proxy" {
+  description = "Express trust proxy setting for reverse proxy configuration. Use '1' for Cloud Run (trusts first hop), 'false' for no proxy, 'true' for all proxies (not recommended), or IP/CIDR range"
+  type        = string
+  default     = "1"
+}
+
 # Backend resource configuration
 
 variable "backend_min_instances" {

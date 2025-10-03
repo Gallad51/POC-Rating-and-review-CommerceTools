@@ -159,6 +159,7 @@ The **`backend.tf`** file contains backend-specific infrastructure:
 | `rate_limit_max_requests` | string | `"10"` | Max requests per window |
 | `cors_origin` | string | `"*"` | Allowed CORS origins |
 | `log_level` | string | `"info"` | Logging level |
+| `trust_proxy` | string | `"1"` | Trust proxy setting: `"1"` (first hop), `"false"` (none), `"true"` (all), or IP/CIDR |
 | `ctp_api_url` | string | `https://api...` | CommerceTools API endpoint |
 | `ctp_auth_url` | string | `https://auth...` | CommerceTools Auth endpoint |
 

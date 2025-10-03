@@ -9,6 +9,10 @@ locals {
         value = var.environment
       },
       {
+        name  = "TRUST_PROXY"
+        value = var.trust_proxy
+      },
+      {
         name  = "RATE_LIMIT_WINDOW_MS"
         value = var.rate_limit_window_ms
       },
