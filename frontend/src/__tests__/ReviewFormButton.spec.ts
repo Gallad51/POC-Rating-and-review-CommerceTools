@@ -85,5 +85,74 @@ describe('ReviewFormButton', () => {
     expect(wrapper.vm.open).toBeDefined();
     expect(wrapper.vm.close).toBeDefined();
   });
+
+  // Variant tests
+  it('applies size variant classes correctly', () => {
+    const wrapper = mount(ReviewFormButton, {
+      props: {
+        productId: 'test-product-1',
+        size: 'large',
+      },
+    });
+
+    expect(wrapper.find('.review-form-button').classes()).toContain('review-form-button--large');
+  });
+
+  it('applies variant style classes correctly', () => {
+    const wrapper = mount(ReviewFormButton, {
+      props: {
+        productId: 'test-product-1',
+        variant: 'outline',
+      },
+    });
+
+    expect(wrapper.find('.review-form-button').classes()).toContain('review-form-button--outline');
+  });
+
+  it('applies position class to modal wrapper correctly', () => {
+    const wrapper = mount(ReviewFormButton, {
+      props: {
+        productId: 'test-product-1',
+        position: 'center',
+      },
+    });
+
+    expect(wrapper.find('.review-form-modal').classes()).toContain('review-form-modal--center');
+  });
+
+  it('applies full-width class when fullWidth is true', () => {
+    const wrapper = mount(ReviewFormButton, {
+      props: {
+        productId: 'test-product-1',
+        fullWidth: true,
+      },
+    });
+
+    expect(wrapper.find('.review-form-button').classes()).toContain('review-form-button--full-width');
+  });
+
+  it('hides icon when showIcon is false', () => {
+    const wrapper = mount(ReviewFormButton, {
+      props: {
+        productId: 'test-product-1',
+        showIcon: false,
+      },
+    });
+
+    const icon = wrapper.find('.review-form-button span[aria-hidden="true"]');
+    expect(icon.exists()).toBe(false);
+  });
+
+  it('shows icon when showIcon is true', () => {
+    const wrapper = mount(ReviewFormButton, {
+      props: {
+        productId: 'test-product-1',
+        showIcon: true,
+      },
+    });
+
+    const icon = wrapper.find('.review-form-button span[aria-hidden="true"]');
+    expect(icon.exists()).toBe(true);
+  });
 });
 

@@ -73,10 +73,46 @@ Compact rating display suitable for product tiles in PLP (Product List Page).
 - `average-rating` - Pre-set average rating (0-5)
 - `total-reviews` - Pre-set total review count
 - `empty-text` - Custom text for no reviews state
+- **`size`** - Size variant: `small`, `medium` (default), `large`
+- **`theme`** - Theme variant: `light` (default), `dark`, `primary`, `secondary`
+- **`display`** - Display style: `inline` (default), `block`, `minimal`
+- **`show-rating`** - Show/hide rating number (default: `true`)
+- **`show-count`** - Show/hide review count (default: `true`)
+- **`star-style`** - Star style: `filled` (default), `outlined`
+- **`rounding`** - Star rounding behavior: `floor`, `ceil`, `round`, `half` (default)
+- **`star-color`** - Custom color for filled stars (CSS color)
+- **`star-empty-color`** - Custom color for empty stars (CSS color)
+- **`star-half-color`** - Custom color for half stars (CSS color)
+- **`star-icon`** - Custom icon for filled stars (default: `★`)
+- **`star-empty-icon`** - Custom icon for empty stars (default: `☆`)
+- **`star-half-icon`** - Custom icon for half stars (default: `★`)
 
 **Example:**
 ```html
+<!-- Basic usage -->
 <rating-compact product-id="prod-123" auto-fetch="true"></rating-compact>
+
+<!-- With variants -->
+<rating-compact 
+  product-id="prod-123" 
+  size="large" 
+  theme="primary"
+  display="block"
+></rating-compact>
+
+<!-- Custom rounding behavior -->
+<rating-compact 
+  average-rating="4.6"
+  rounding="floor"
+></rating-compact>
+
+<!-- Custom colors and icons -->
+<rating-compact 
+  product-id="prod-123"
+  star-color="#ff0000"
+  star-icon="❤️"
+  star-empty-icon="🤍"
+></rating-compact>
 ```
 
 ### 2. `<reviews-list>`
@@ -87,10 +123,26 @@ Complete reviews display with rating summary, filters, sorting, and pagination f
 - `product-id` - Product identifier (required)
 - `page-size` - Number of reviews per page (default: 10)
 - `sort-by` - Default sort order (newest, helpful, highest, lowest)
+- **`layout`** - Layout variant: `default`, `compact`, `grid`
+- **`theme`** - Theme variant: `light` (default), `dark`
+- **`show-summary`** - Show/hide rating summary (default: `true`)
+- **`show-filters`** - Show/hide filter controls (default: `true`)
+- **`show-sorting`** - Show/hide sort dropdown (default: `true`)
+- **`show-pagination`** - Show/hide pagination (default: `true`)
+- **`card-style`** - Card style: `elevated` (default), `flat`, `bordered`
 
 **Example:**
 ```html
+<!-- Basic usage -->
 <reviews-list product-id="prod-123" page-size="5"></reviews-list>
+
+<!-- With variants for sidebar -->
+<reviews-list 
+  product-id="prod-123" 
+  layout="compact"
+  show-filters="false"
+  card-style="flat"
+></reviews-list>
 ```
 
 ### 3. `<review-form-button>`
@@ -98,6 +150,46 @@ Complete reviews display with rating summary, filters, sorting, and pagination f
 Button that opens a modal form for submitting new reviews with GDPR compliance.
 
 **Attributes:**
+- `product-id` - Product identifier (required)
+- `button-text` - Button label text (default: "Write a Review")
+- `user-token` - Authentication token
+- **`size`** - Button size: `small`, `medium` (default), `large`
+- **`variant`** - Button variant: `primary` (default), `secondary`, `outline`, `ghost`
+- **`position`** - Button alignment: `left` (default), `center`, `right`
+- **`full-width`** - Make button full width (default: `false`)
+- **`show-icon`** - Show/hide icon (default: `true`)
+
+**Example:**
+```html
+<!-- Basic usage -->
+<review-form-button product-id="prod-123"></review-form-button>
+
+<!-- With variants -->
+<review-form-button 
+  product-id="prod-123"
+  variant="outline"
+  size="large"
+  position="center"
+></review-form-button>
+```
+
+## 🎨 Customizable Variants
+
+All components support multiple variants to adapt to different design contexts:
+
+- **Size variants**: `small`, `medium`, `large` - adapt to different UI densities
+- **Theme variants**: `light`, `dark`, `primary`, `secondary` - match your brand colors
+- **Layout variants**: Different layouts for various page contexts (list, grid, compact)
+- **Display variants**: Control which information is shown or hidden
+
+These variants make the components flexible enough for use in:
+- Product listing pages (PLPs)
+- Product detail pages (PDPs)
+- Shopping carts
+- Wishlists
+- Admin panels
+- Mobile apps
+- Any other context!
 - `product-id` - Product identifier (required)
 - `button-text` - Custom button text (default: "Write a Review")
 - `user-token` - Authentication token for user (if required)

@@ -168,11 +168,256 @@
                     product-id="test-product-1"
                     auto-fetch="true"
                 ></rating-compact>
+                
+                <h3 style="margin-top: 2rem;">Size Variants:</h3>
+                <div style="display: flex; gap: 2rem; align-items: center; margin: 1rem 0;">
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Small</p>
+                        <rating-compact 
+                            product-id="test-product-1"
+                            auto-fetch="true"
+                            size="small"
+                        ></rating-compact>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Medium (default)</p>
+                        <rating-compact 
+                            product-id="test-product-1"
+                            auto-fetch="true"
+                            size="medium"
+                        ></rating-compact>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Large</p>
+                        <rating-compact 
+                            product-id="test-product-1"
+                            auto-fetch="true"
+                            size="large"
+                        ></rating-compact>
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 2rem;">Theme Variants:</h3>
+                <div style="display: flex; gap: 2rem; align-items: center; margin: 1rem 0;">
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Light (default)</p>
+                        <rating-compact 
+                            average-rating="4.5"
+                            total-reviews="128"
+                            theme="light"
+                        ></rating-compact>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Dark</p>
+                        <rating-compact 
+                            average-rating="4.5"
+                            total-reviews="128"
+                            theme="dark"
+                        ></rating-compact>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Primary</p>
+                        <rating-compact 
+                            average-rating="4.5"
+                            total-reviews="128"
+                            theme="primary"
+                        ></rating-compact>
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 2rem;">Display Variants:</h3>
+                <div style="display: flex; flex-direction: column; gap: 1rem; margin: 1rem 0;">
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Inline (default) - stars and info on same line</p>
+                        <rating-compact 
+                            average-rating="4.5"
+                            total-reviews="128"
+                            display="inline"
+                        ></rating-compact>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Block - stars and info stacked vertically</p>
+                        <rating-compact 
+                            average-rating="4.5"
+                            total-reviews="128"
+                            display="block"
+                        ></rating-compact>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Minimal - stars only, no text</p>
+                        <rating-compact 
+                            average-rating="4.5"
+                            total-reviews="128"
+                            display="minimal"
+                        ></rating-compact>
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 2rem;">Star Rounding Behaviors:</h3>
+                <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">For a rating of 4.6:</p>
+                <div style="display: flex; flex-direction: column; gap: 1rem; margin: 1rem 0;">
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;"><strong>Half stars (default):</strong> 4.6 → 4.5 stars displayed</p>
+                        <rating-compact 
+                            average-rating="4.6"
+                            total-reviews="100"
+                            rounding="half"
+                        ></rating-compact>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;"><strong>Floor:</strong> 4.6 → 4 stars displayed</p>
+                        <rating-compact 
+                            average-rating="4.6"
+                            total-reviews="100"
+                            rounding="floor"
+                        ></rating-compact>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;"><strong>Ceiling:</strong> 4.6 → 5 stars displayed</p>
+                        <rating-compact 
+                            average-rating="4.6"
+                            total-reviews="100"
+                            rounding="ceil"
+                        ></rating-compact>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;"><strong>Round:</strong> 4.6 → 5 stars displayed (>0.5 = full star)</p>
+                        <rating-compact 
+                            average-rating="4.6"
+                            total-reviews="100"
+                            rounding="round"
+                        ></rating-compact>
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 2rem;">Custom Colors:</h3>
+                <div style="display: flex; gap: 2rem; align-items: center; margin: 1rem 0; flex-wrap: wrap;">
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Red stars</p>
+                        <rating-compact 
+                            average-rating="4.5"
+                            total-reviews="100"
+                            star-color="#ff0000"
+                            star-empty-color="#ffcccc"
+                            star-half-color="#ff0000"
+                        ></rating-compact>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Green stars</p>
+                        <rating-compact 
+                            average-rating="4.5"
+                            total-reviews="100"
+                            star-color="#00cc00"
+                            star-empty-color="#ccffcc"
+                            star-half-color="#00cc00"
+                        ></rating-compact>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Purple stars</p>
+                        <rating-compact 
+                            average-rating="4.5"
+                            total-reviews="100"
+                            star-color="#9c27b0"
+                            star-empty-color="#e1bee7"
+                            star-half-color="#9c27b0"
+                        ></rating-compact>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Orange stars</p>
+                        <rating-compact 
+                            average-rating="4.5"
+                            total-reviews="100"
+                            star-color="#ff9800"
+                            star-empty-color="#ffe0b2"
+                            star-half-color="#ff9800"
+                        ></rating-compact>
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 2rem;">Custom Icons:</h3>
+                <div style="display: flex; gap: 2rem; align-items: center; margin: 1rem 0; flex-wrap: wrap;">
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Hearts</p>
+                        <rating-compact 
+                            average-rating="4.5"
+                            total-reviews="100"
+                            star-icon="❤️"
+                            star-empty-icon="🤍"
+                            star-half-icon="❤️"
+                        ></rating-compact>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Thumbs up (Note: Colored emojis don't support CSS colors)</p>
+                        <rating-compact 
+                            average-rating="4.5"
+                            total-reviews="100"
+                            star-icon="👍"
+                            star-empty-icon="👍"
+                            star-half-icon="👍"
+                        ></rating-compact>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Circles</p>
+                        <rating-compact 
+                            average-rating="4.5"
+                            total-reviews="100"
+                            star-icon="●"
+                            star-empty-icon="○"
+                            star-half-icon="●"
+                            star-color="#2196F3"
+                            star-empty-color="#BBDEFB"
+                            star-half-color="#2196F3"
+                        ></rating-compact>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Diamonds</p>
+                        <rating-compact 
+                            average-rating="4.5"
+                            total-reviews="100"
+                            star-icon="♦"
+                            star-empty-icon="♢"
+                            star-half-icon="♦"
+                            star-color="#E91E63"
+                            star-empty-color="#F8BBD0"
+                            star-half-color="#E91E63"
+                        ></rating-compact>
+                    </div>
+                </div>
             </div>
 
-            <div class="code-example"><code>&lt;rating-compact 
+            <div class="code-example"><code>&lt;!-- Default --&gt;
+&lt;rating-compact 
     product-id="test-product-1"
     auto-fetch="true"
+&gt;&lt;/rating-compact&gt;
+
+&lt;!-- Size variants --&gt;
+&lt;rating-compact size="small"&gt;&lt;/rating-compact&gt;
+&lt;rating-compact size="large"&gt;&lt;/rating-compact&gt;
+
+&lt;!-- Theme variants --&gt;
+&lt;rating-compact theme="dark"&gt;&lt;/rating-compact&gt;
+&lt;rating-compact theme="primary"&gt;&lt;/rating-compact&gt;
+
+&lt;!-- Display variants --&gt;
+&lt;rating-compact display="block"&gt;&lt;/rating-compact&gt;
+&lt;rating-compact display="minimal"&gt;&lt;/rating-compact&gt;
+
+&lt;!-- Rounding behaviors --&gt;
+&lt;rating-compact rounding="floor"&gt;&lt;/rating-compact&gt;
+&lt;rating-compact rounding="ceil"&gt;&lt;/rating-compact&gt;
+&lt;rating-compact rounding="round"&gt;&lt;/rating-compact&gt;
+
+&lt;!-- Custom colors --&gt;
+&lt;rating-compact 
+    star-color="#ff0000" 
+    star-empty-color="#ffcccc"
+&gt;&lt;/rating-compact&gt;
+
+&lt;!-- Custom icons --&gt;
+&lt;rating-compact 
+    star-icon="❤️" 
+    star-empty-icon="🤍"
 &gt;&lt;/rating-compact&gt;</code></div>
         </div>
 
@@ -208,12 +453,89 @@
                     product-id="test-product-1"
                     button-text="Write a Review"
                 ></review-form-button>
+                
+                <h3 style="margin-top: 2rem;">Size Variants:</h3>
+                <div style="display: flex; gap: 1rem; align-items: center; margin: 1rem 0;">
+                    <review-form-button 
+                        product-id="test-product-1"
+                        button-text="Small"
+                        size="small"
+                    ></review-form-button>
+                    <review-form-button 
+                        product-id="test-product-1"
+                        button-text="Medium"
+                        size="medium"
+                    ></review-form-button>
+                    <review-form-button 
+                        product-id="test-product-1"
+                        button-text="Large"
+                        size="large"
+                    ></review-form-button>
+                </div>
+                
+                <h3 style="margin-top: 2rem;">Variant Styles:</h3>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin: 1rem 0;">
+                    <review-form-button 
+                        product-id="test-product-1"
+                        button-text="Primary"
+                        variant="primary"
+                    ></review-form-button>
+                    <review-form-button 
+                        product-id="test-product-1"
+                        button-text="Secondary"
+                        variant="secondary"
+                    ></review-form-button>
+                    <review-form-button 
+                        product-id="test-product-1"
+                        button-text="Outline"
+                        variant="outline"
+                    ></review-form-button>
+                    <review-form-button 
+                        product-id="test-product-1"
+                        button-text="Ghost"
+                        variant="ghost"
+                    ></review-form-button>
+                </div>
+                
+                <h3 style="margin-top: 2rem;">Behavior Variants:</h3>
+                <div style="margin: 1rem 0;">
+                    <div style="margin-bottom: 1.5rem;">
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;"><strong>Button (default):</strong> Click button to open review form</p>
+                        <review-form-button 
+                            product-id="test-product-1"
+                            button-text="Write Review"
+                            behavior="button"
+                        ></review-form-button>
+                    </div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;"><strong>Note First:</strong> Click stars to select rating and open review form with rating pre-filled</p>
+                        <review-form-button 
+                            product-id="test-product-1"
+                            behavior="noteFirst"
+                        ></review-form-button>
+                    </div>
+                </div>
+                </div>
             </div>
 
-            <div class="code-example"><code>&lt;review-form-button 
+            <div class="code-example"><code>&lt;!-- Default --&gt;
+&lt;review-form-button 
     product-id="test-product-1"
     button-text="Write a Review"
-&gt;&lt;/review-form-button&gt;</code></div>
+&gt;&lt;/review-form-button&gt;
+
+&lt;!-- Size variants --&gt;
+&lt;review-form-button size="small"&gt;&lt;/review-form-button&gt;
+&lt;review-form-button size="large"&gt;&lt;/review-form-button&gt;
+
+&lt;!-- Variant styles --&gt;
+&lt;review-form-button variant="secondary"&gt;&lt;/review-form-button&gt;
+&lt;review-form-button variant="outline"&gt;&lt;/review-form-button&gt;
+&lt;review-form-button variant="ghost"&gt;&lt;/review-form-button&gt;
+
+&lt;!-- Behavior variants --&gt;
+&lt;review-form-button behavior="button"&gt;&lt;/review-form-button&gt;
+&lt;review-form-button behavior="noteFirst"&gt;&lt;/review-form-button&gt;</code></div>
         </div>
 
         <!-- Integration Instructions -->
@@ -243,7 +565,7 @@
     <!-- Load the Web Components -->
     <script type="module">
         // Load the web components bundle
-        import './ratings-reviews-components.es.js';
+        import '/ratings-reviews-components.es.js';
 
         // Update the CDN script example with the current URL
         const currentOrigin = window.location.origin;
