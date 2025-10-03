@@ -26,8 +26,8 @@
 
     <!-- Empty state (no reviews) -->
     <div v-else-if="totalReviews === 0" class="rating-compact__empty">
-      <span class="rating-compact__stars" aria-hidden="true">
-        <span v-for="i in 5" :key="i" class="rating-compact__star rating-compact__star--empty">☆</span>
+      <span class="rating-compact__stars" aria-hidden="true" :style="starColorStyle">
+        <span v-for="i in 5" :key="i" class="rating-compact__star rating-compact__star--empty">{{ props.starEmptyIcon }}</span>
       </span>
       <span class="rating-compact__text">{{ emptyText }}</span>
     </div>
@@ -39,21 +39,20 @@
         class="rating-compact__stars"
         :aria-label="`${displayRating} stars`"
         role="img"
+        :style="starColorStyle"
       >
         <span
           v-for="star in 5"
           :key="star"
           class="rating-compact__star"
           :class="{
-            'rating-compact__star--full': star <= Math.floor(averageRating),
-            'rating-compact__star--half': star === Math.ceil(averageRating) && averageRating % 1 !== 0,
-            'rating-compact__star--empty': star > Math.ceil(averageRating)
+            'rating-compact__star--full': getStarState(star) === 'full',
+            'rating-compact__star--half': getStarState(star) === 'half',
+            'rating-compact__star--empty': getStarState(star) === 'empty'
           }"
           aria-hidden="true"
         >
-          <span v-if="star <= Math.floor(averageRating)">★</span>
-          <span v-else-if="star === Math.ceil(averageRating) && averageRating % 1 !== 0">★</span>
-          <span v-else>☆</span>
+          {{ getStarIcon(getStarState(star)) }}
         </span>
       </div>
 
@@ -95,6 +94,20 @@ interface Props {
   showCount?: boolean;
   /** Star style: filled, outlined */
   starStyle?: 'filled' | 'outlined';
+  /** Star rounding behavior: floor, ceil, round, half */
+  rounding?: 'floor' | 'ceil' | 'round' | 'half';
+  /** Custom color for filled stars */
+  starColor?: string;
+  /** Custom color for empty stars */
+  starEmptyColor?: string;
+  /** Custom color for half stars */
+  starHalfColor?: string;
+  /** Custom icon for filled stars */
+  starIcon?: string;
+  /** Custom icon for empty stars */
+  starEmptyIcon?: string;
+  /** Custom icon for half stars */
+  starHalfIcon?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -107,6 +120,10 @@ const props = withDefaults(defineProps<Props>(), {
   showRating: true,
   showCount: true,
   starStyle: 'filled',
+  rounding: 'half',
+  starIcon: '★',
+  starEmptyIcon: '☆',
+  starHalfIcon: '★',
 });
 
 const emit = defineEmits<{
@@ -139,6 +156,72 @@ const formattedReviewCount = computed(() => {
     return `${(count / 1000).toFixed(1)}k`;
   }
   return count.toString();
+});
+
+// Calculate displayed rating based on rounding mode
+const displayedStars = computed(() => {
+  const rating = averageRating.value;
+  
+  switch (props.rounding) {
+    case 'floor':
+      return Math.floor(rating);
+    case 'ceil':
+      return Math.ceil(rating);
+    case 'round':
+      return Math.round(rating);
+    case 'half':
+    default:
+      return rating; // Will use half-star logic in template
+  }
+});
+
+// Determine star state for each position
+const getStarState = (position: number): 'full' | 'half' | 'empty' => {
+  const rating = averageRating.value;
+  
+  if (props.rounding === 'half') {
+    // Original half-star logic
+    if (position <= Math.floor(rating)) {
+      return 'full';
+    } else if (position === Math.ceil(rating) && rating % 1 !== 0) {
+      return 'half';
+    } else {
+      return 'empty';
+    }
+  } else {
+    // For floor, ceil, round modes - no half stars
+    const displayStars = displayedStars.value;
+    return position <= displayStars ? 'full' : 'empty';
+  }
+};
+
+// Get icon for star based on its state
+const getStarIcon = (state: 'full' | 'half' | 'empty'): string => {
+  switch (state) {
+    case 'full':
+      return props.starIcon;
+    case 'half':
+      return props.starHalfIcon;
+    case 'empty':
+      return props.starEmptyIcon;
+  }
+};
+
+// CSS custom properties for star colors
+const starColorStyle = computed(() => {
+  const styles: Record<string, string> = {};
+  
+  if (props.starColor) {
+    styles['--star-color-filled'] = props.starColor;
+  }
+  if (props.starEmptyColor) {
+    styles['--star-color-empty'] = props.starEmptyColor;
+  }
+  if (props.starHalfColor) {
+    styles['--star-color-half'] = props.starHalfColor;
+  }
+  
+  return styles;
 });
 
 const fetchRating = async () => {
@@ -288,16 +371,16 @@ defineExpose({
 }
 
 .rating-compact__star {
-  color: #ffc107;
+  color: var(--star-color-filled, #ffc107);
   font-size: 1rem;
 }
 
 .rating-compact__star--full {
-  color: #ffc107;
+  color: var(--star-color-filled, #ffc107);
 }
 
 .rating-compact__star--half {
-  color: #ffc107;
+  color: var(--star-color-half, #ffc107);
   position: relative;
   overflow: hidden;
 }
@@ -306,11 +389,11 @@ defineExpose({
   content: '☆';
   position: absolute;
   left: 50%;
-  color: #e0e0e0;
+  color: var(--star-color-empty, #e0e0e0);
 }
 
 .rating-compact__star--empty {
-  color: #e0e0e0;
+  color: var(--star-color-empty, #e0e0e0);
 }
 
 .rating-compact__info {

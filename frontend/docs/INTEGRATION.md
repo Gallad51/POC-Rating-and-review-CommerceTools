@@ -216,6 +216,13 @@ Compact rating display perfect for product lists and tiles.
 | `show-rating` | String | No | `"true"` | Show/hide rating number |
 | `show-count` | String | No | `"true"` | Show/hide review count |
 | `star-style` | String | No | `"filled"` | Star style: `filled`, `outlined` |
+| `rounding` | String | No | `"half"` | Star rounding behavior: `floor`, `ceil`, `round`, `half` |
+| `star-color` | String | No | - | Custom color for filled stars (CSS color value) |
+| `star-empty-color` | String | No | - | Custom color for empty stars (CSS color value) |
+| `star-half-color` | String | No | - | Custom color for half stars (CSS color value) |
+| `star-icon` | String | No | `"★"` | Custom icon for filled stars |
+| `star-empty-icon` | String | No | `"☆"` | Custom icon for empty stars |
+| `star-half-icon` | String | No | `"★"` | Custom icon for half stars |
 
 **Example:**
 
@@ -265,6 +272,39 @@ Compact rating display perfect for product lists and tiles.
   product-id="prod-123"
   display="minimal"
   show-rating="false"
+></rating-compact>
+
+<!-- Star rounding behaviors -->
+<rating-compact 
+  average-rating="4.6"
+  total-reviews="100"
+  rounding="floor"
+></rating-compact>
+
+<rating-compact 
+  average-rating="4.6"
+  total-reviews="100"
+  rounding="ceil"
+></rating-compact>
+
+<rating-compact 
+  average-rating="4.6"
+  total-reviews="100"
+  rounding="round"
+></rating-compact>
+
+<!-- Custom colors -->
+<rating-compact 
+  product-id="prod-123"
+  star-color="#ff0000"
+  star-empty-color="#ffcccc"
+></rating-compact>
+
+<!-- Custom icons -->
+<rating-compact 
+  product-id="prod-123"
+  star-icon="❤️"
+  star-empty-icon="🤍"
 ></rating-compact>
 
 <!-- Compact mode for tight spaces -->

@@ -164,4 +164,81 @@ describe('RatingCompact', () => {
 
     expect(wrapper.find('.rating-compact').classes()).toContain('rating-compact--compact');
   });
+
+  // Rounding behavior tests
+  it('applies floor rounding correctly', () => {
+    const wrapper = mount(RatingCompact, {
+      props: {
+        averageRating: 4.6,
+        totalReviews: 10,
+        rounding: 'floor',
+      },
+    });
+
+    // With floor rounding, 4.6 should show 4 filled stars
+    const stars = wrapper.findAll('.rating-compact__star');
+    const fullStars = stars.filter(star => star.classes().includes('rating-compact__star--full'));
+    expect(fullStars.length).toBe(4);
+  });
+
+  it('applies ceil rounding correctly', () => {
+    const wrapper = mount(RatingCompact, {
+      props: {
+        averageRating: 4.3,
+        totalReviews: 10,
+        rounding: 'ceil',
+      },
+    });
+
+    // With ceil rounding, 4.3 should show 5 filled stars
+    const stars = wrapper.findAll('.rating-compact__star');
+    const fullStars = stars.filter(star => star.classes().includes('rating-compact__star--full'));
+    expect(fullStars.length).toBe(5);
+  });
+
+  it('applies round rounding correctly', () => {
+    const wrapper = mount(RatingCompact, {
+      props: {
+        averageRating: 4.6,
+        totalReviews: 10,
+        rounding: 'round',
+      },
+    });
+
+    // With round rounding, 4.6 should show 5 filled stars (rounds up)
+    const stars = wrapper.findAll('.rating-compact__star');
+    const fullStars = stars.filter(star => star.classes().includes('rating-compact__star--full'));
+    expect(fullStars.length).toBe(5);
+  });
+
+  it('uses custom star icon', () => {
+    const wrapper = mount(RatingCompact, {
+      props: {
+        averageRating: 5.0,
+        totalReviews: 10,
+        starIcon: '❤️',
+        starEmptyIcon: '🤍',
+      },
+    });
+
+    const stars = wrapper.findAll('.rating-compact__star');
+    const fullStar = stars.find(star => star.classes().includes('rating-compact__star--full'));
+    expect(fullStar?.text()).toBe('❤️');
+  });
+
+  it('applies custom star colors via style attribute', () => {
+    const wrapper = mount(RatingCompact, {
+      props: {
+        averageRating: 4.5,
+        totalReviews: 10,
+        starColor: '#ff0000',
+        starEmptyColor: '#cccccc',
+      },
+    });
+
+    const starsContainer = wrapper.find('.rating-compact__stars');
+    const style = starsContainer.attributes('style');
+    expect(style).toContain('--star-color-filled');
+    expect(style).toContain('#ff0000');
+  });
 });

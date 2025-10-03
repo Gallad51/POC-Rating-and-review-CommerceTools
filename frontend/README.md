@@ -79,6 +79,13 @@ Compact rating display suitable for product tiles in PLP (Product List Page).
 - **`show-rating`** - Show/hide rating number (default: `true`)
 - **`show-count`** - Show/hide review count (default: `true`)
 - **`star-style`** - Star style: `filled` (default), `outlined`
+- **`rounding`** - Star rounding behavior: `floor`, `ceil`, `round`, `half` (default)
+- **`star-color`** - Custom color for filled stars (CSS color)
+- **`star-empty-color`** - Custom color for empty stars (CSS color)
+- **`star-half-color`** - Custom color for half stars (CSS color)
+- **`star-icon`** - Custom icon for filled stars (default: `★`)
+- **`star-empty-icon`** - Custom icon for empty stars (default: `☆`)
+- **`star-half-icon`** - Custom icon for half stars (default: `★`)
 
 **Example:**
 ```html
@@ -91,6 +98,20 @@ Compact rating display suitable for product tiles in PLP (Product List Page).
   size="large" 
   theme="primary"
   display="block"
+></rating-compact>
+
+<!-- Custom rounding behavior -->
+<rating-compact 
+  average-rating="4.6"
+  rounding="floor"
+></rating-compact>
+
+<!-- Custom colors and icons -->
+<rating-compact 
+  product-id="prod-123"
+  star-color="#ff0000"
+  star-icon="❤️"
+  star-empty-icon="🤍"
 ></rating-compact>
 ```
 

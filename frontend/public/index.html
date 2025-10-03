@@ -252,6 +252,127 @@
                         ></rating-compact>
                     </div>
                 </div>
+                
+                <h3 style="margin-top: 2rem;">Star Rounding Behaviors:</h3>
+                <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">For a rating of 4.6:</p>
+                <div style="display: flex; flex-direction: column; gap: 1rem; margin: 1rem 0;">
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;"><strong>Half stars (default):</strong> 4.6 → 4.5 stars displayed</p>
+                        <rating-compact 
+                            average-rating="4.6"
+                            total-reviews="100"
+                            rounding="half"
+                        ></rating-compact>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;"><strong>Floor:</strong> 4.6 → 4 stars displayed</p>
+                        <rating-compact 
+                            average-rating="4.6"
+                            total-reviews="100"
+                            rounding="floor"
+                        ></rating-compact>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;"><strong>Ceiling:</strong> 4.6 → 5 stars displayed</p>
+                        <rating-compact 
+                            average-rating="4.6"
+                            total-reviews="100"
+                            rounding="ceil"
+                        ></rating-compact>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;"><strong>Round:</strong> 4.6 → 5 stars displayed (>0.5 = full star)</p>
+                        <rating-compact 
+                            average-rating="4.6"
+                            total-reviews="100"
+                            rounding="round"
+                        ></rating-compact>
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 2rem;">Custom Colors:</h3>
+                <div style="display: flex; gap: 2rem; align-items: center; margin: 1rem 0; flex-wrap: wrap;">
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Red stars</p>
+                        <rating-compact 
+                            average-rating="4.5"
+                            total-reviews="100"
+                            star-color="#ff0000"
+                            star-empty-color="#ffcccc"
+                        ></rating-compact>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Green stars</p>
+                        <rating-compact 
+                            average-rating="4.5"
+                            total-reviews="100"
+                            star-color="#00cc00"
+                            star-empty-color="#ccffcc"
+                        ></rating-compact>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Purple stars</p>
+                        <rating-compact 
+                            average-rating="4.5"
+                            total-reviews="100"
+                            star-color="#9c27b0"
+                            star-empty-color="#e1bee7"
+                        ></rating-compact>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Orange stars</p>
+                        <rating-compact 
+                            average-rating="4.5"
+                            total-reviews="100"
+                            star-color="#ff9800"
+                            star-empty-color="#ffe0b2"
+                        ></rating-compact>
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 2rem;">Custom Icons:</h3>
+                <div style="display: flex; gap: 2rem; align-items: center; margin: 1rem 0; flex-wrap: wrap;">
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Hearts</p>
+                        <rating-compact 
+                            average-rating="4.5"
+                            total-reviews="100"
+                            star-icon="❤️"
+                            star-empty-icon="🤍"
+                            star-half-icon="❤️"
+                        ></rating-compact>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Thumbs up</p>
+                        <rating-compact 
+                            average-rating="4.5"
+                            total-reviews="100"
+                            star-icon="👍"
+                            star-empty-icon="👎"
+                            star-half-icon="👍"
+                        ></rating-compact>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Circles</p>
+                        <rating-compact 
+                            average-rating="4.5"
+                            total-reviews="100"
+                            star-icon="●"
+                            star-empty-icon="○"
+                            star-half-icon="●"
+                        ></rating-compact>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Diamonds</p>
+                        <rating-compact 
+                            average-rating="4.5"
+                            total-reviews="100"
+                            star-icon="♦"
+                            star-empty-icon="♢"
+                            star-half-icon="♦"
+                        ></rating-compact>
+                    </div>
+                </div>
             </div>
 
             <div class="code-example"><code>&lt;!-- Default --&gt;
@@ -270,7 +391,24 @@
 
 &lt;!-- Display variants --&gt;
 &lt;rating-compact display="block"&gt;&lt;/rating-compact&gt;
-&lt;rating-compact display="minimal"&gt;&lt;/rating-compact&gt;</code></div>
+&lt;rating-compact display="minimal"&gt;&lt;/rating-compact&gt;
+
+&lt;!-- Rounding behaviors --&gt;
+&lt;rating-compact rounding="floor"&gt;&lt;/rating-compact&gt;
+&lt;rating-compact rounding="ceil"&gt;&lt;/rating-compact&gt;
+&lt;rating-compact rounding="round"&gt;&lt;/rating-compact&gt;
+
+&lt;!-- Custom colors --&gt;
+&lt;rating-compact 
+    star-color="#ff0000" 
+    star-empty-color="#ffcccc"
+&gt;&lt;/rating-compact&gt;
+
+&lt;!-- Custom icons --&gt;
+&lt;rating-compact 
+    star-icon="❤️" 
+    star-empty-icon="🤍"
+&gt;&lt;/rating-compact&gt;</code></div>
         </div>
 
         <!-- Component 2: Reviews List -->
