@@ -1,5 +1,12 @@
 <template>
-  <div class="reviews-list" :class="{ 'reviews-list--loading': isLoading }">
+  <div 
+    class="reviews-list" 
+    :class="[
+      `reviews-list--${props.layout}`,
+      `reviews-list--${props.theme}`,
+      { 'reviews-list--loading': isLoading }
+    ]"
+  >
     <!-- Header with rating summary -->
     <div class="reviews-list__header">
       <h2 class="reviews-list__title">Customer Reviews</h2>
@@ -54,8 +61,8 @@
     </div>
 
     <!-- Filters and sorting -->
-    <div class="reviews-list__controls">
-      <div class="reviews-list__filters">
+    <div v-if="props.showFilters || props.showSorting" class="reviews-list__controls">
+      <div v-if="props.showFilters" class="reviews-list__filters">
         <button
           :class="['reviews-list__filter-btn', { 'reviews-list__filter-btn--active': !currentFilters.rating }]"
           @click="clearRatingFilter"
@@ -72,7 +79,7 @@
         </button>
       </div>
 
-      <div class="reviews-list__sort">
+      <div v-if="props.showSorting" class="reviews-list__sort">
         <label for="sort-select" class="reviews-list__sort-label">Sort by:</label>
         <select
           id="sort-select"
@@ -114,6 +121,7 @@
         v-for="review in reviews"
         :key="review.id"
         class="review-card"
+        :class="`review-card--${props.cardStyle}`"
         role="listitem"
       >
         <div class="review-card__header">
@@ -159,7 +167,7 @@
     </div>
 
     <!-- Pagination -->
-    <div v-if="pagination.total > pagination.limit" class="reviews-list__pagination">
+    <div v-if="props.showPagination && pagination.total > pagination.limit" class="reviews-list__pagination">
       <button
         class="reviews-list__page-btn"
         :disabled="pagination.page === 1"
@@ -201,6 +209,18 @@ interface Props {
   showSummary?: boolean;
   /** Initial filters */
   initialFilters?: ReviewFilters;
+  /** Layout variant: default, compact, grid */
+  layout?: 'default' | 'compact' | 'grid';
+  /** Theme variant: light, dark */
+  theme?: 'light' | 'dark';
+  /** Show/hide filters */
+  showFilters?: boolean;
+  /** Show/hide sorting */
+  showSorting?: boolean;
+  /** Show/hide pagination */
+  showPagination?: boolean;
+  /** Card style: elevated, flat, bordered */
+  cardStyle?: 'elevated' | 'flat' | 'bordered';
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -208,6 +228,12 @@ const props = withDefaults(defineProps<Props>(), {
   emptyText: 'No reviews yet. Be the first to review!',
   showSummary: true,
   initialFilters: () => ({ sortBy: 'date', sortOrder: 'desc' }),
+  layout: 'default',
+  theme: 'light',
+  showFilters: true,
+  showSorting: true,
+  showPagination: true,
+  cardStyle: 'elevated',
 });
 
 const emit = defineEmits<{
@@ -367,6 +393,88 @@ defineExpose({
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   max-width: 1200px;
   margin: 0 auto;
+}
+
+/* Layout variants */
+.reviews-list--default .reviews-list__items {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.reviews-list--compact .reviews-list__items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.reviews-list--compact .review-card {
+  padding: 1rem;
+}
+
+.reviews-list--compact .review-card__comment {
+  font-size: 0.875rem;
+}
+
+.reviews-list--grid .reviews-list__items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+/* Theme variants */
+.reviews-list--light {
+  color: var(--reviews-text-color, #333);
+  background: var(--reviews-bg-color, transparent);
+}
+
+.reviews-list--dark {
+  color: var(--reviews-text-color-dark, #fff);
+  background: var(--reviews-bg-color-dark, #1a1a1a);
+}
+
+.reviews-list--dark .reviews-list__title {
+  color: var(--reviews-text-color-dark, #fff);
+}
+
+.reviews-list--dark .review-card {
+  background: var(--reviews-card-bg-dark, #2a2a2a);
+  border-color: var(--reviews-border-color-dark, #444);
+}
+
+.reviews-list--dark .review-card__author {
+  color: var(--reviews-text-color-dark, #fff);
+}
+
+.reviews-list--dark .review-card__comment {
+  color: var(--reviews-text-color-dark, #e0e0e0);
+}
+
+.reviews-list--dark .reviews-list__summary {
+  background: var(--reviews-summary-bg-dark, #2a2a2a);
+}
+
+.reviews-list--dark .reviews-list__avg-rating {
+  color: var(--reviews-text-color-dark, #fff);
+}
+
+/* Card style variants */
+.review-card--elevated {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.review-card--elevated:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.review-card--flat {
+  box-shadow: none;
+  background: transparent;
+}
+
+.review-card--bordered {
+  box-shadow: none;
+  border: 2px solid var(--reviews-border-color, #e0e0e0);
 }
 
 .reviews-list__header {

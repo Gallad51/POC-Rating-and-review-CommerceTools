@@ -1,11 +1,19 @@
 <template>
-  <div class="review-form-modal">
+  <div 
+    class="review-form-modal"
+    :class="`review-form-modal--${props.position}`"
+  >
     <button
       class="review-form-button"
+      :class="[
+        `review-form-button--${props.size}`,
+        `review-form-button--${props.variant}`,
+        { 'review-form-button--full-width': props.fullWidth }
+      ]"
       :aria-label="buttonLabel"
       @click="openModal"
     >
-      <span aria-hidden="true">✍️</span>
+      <span v-if="props.showIcon" aria-hidden="true">✍️</span>
       {{ buttonText }}
     </button>
 
@@ -169,6 +177,16 @@ interface Props {
   requireAuth?: boolean;
   /** Check if user has purchased product */
   checkPurchase?: boolean;
+  /** Button size: small, medium, large */
+  size?: 'small' | 'medium' | 'large';
+  /** Button variant: primary, secondary, outline, ghost */
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  /** Button position: left, center, right */
+  position?: 'left' | 'center' | 'right';
+  /** Full width button */
+  fullWidth?: boolean;
+  /** Show icon */
+  showIcon?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -176,6 +194,11 @@ const props = withDefaults(defineProps<Props>(), {
   buttonLabel: 'Write a review for this product',
   requireAuth: false,
   checkPurchase: false,
+  size: 'medium',
+  variant: 'primary',
+  position: 'left',
+  fullWidth: false,
+  showIcon: true,
 });
 
 const emit = defineEmits<{
@@ -388,23 +411,93 @@ defineExpose({
   display: inline-block;
 }
 
+.review-form-modal--left {
+  text-align: left;
+}
+
+.review-form-modal--center {
+  text-align: center;
+}
+
+.review-form-modal--right {
+  text-align: right;
+}
+
 .review-form-button {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: #007bff;
-  color: #fff;
+  background: var(--button-bg-color, #007bff);
+  color: var(--button-text-color, #fff);
   border: none;
   border-radius: 4px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, transform 0.2s;
 }
 
-.review-form-button:hover {
-  background: #0056b3;
+/* Size variants */
+.review-form-button--small {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+.review-form-button--medium {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+}
+
+.review-form-button--large {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+}
+
+/* Variant styles */
+.review-form-button--primary {
+  background: var(--button-bg-color, #007bff);
+  color: var(--button-text-color, #fff);
+}
+
+.review-form-button--primary:hover {
+  background: var(--button-hover-bg, #0056b3);
+}
+
+.review-form-button--secondary {
+  background: var(--button-secondary-bg, #6c757d);
+  color: var(--button-secondary-text, #fff);
+}
+
+.review-form-button--secondary:hover {
+  background: var(--button-secondary-hover-bg, #5a6268);
+}
+
+.review-form-button--outline {
+  background: transparent;
+  color: var(--button-outline-color, #007bff);
+  border: 2px solid var(--button-outline-border, #007bff);
+}
+
+.review-form-button--outline:hover {
+  background: var(--button-outline-hover-bg, #007bff);
+  color: var(--button-outline-hover-text, #fff);
+}
+
+.review-form-button--ghost {
+  background: transparent;
+  color: var(--button-ghost-color, #007bff);
+  border: none;
+}
+
+.review-form-button--ghost:hover {
+  background: var(--button-ghost-hover-bg, rgba(0, 123, 255, 0.1));
+}
+
+/* Full width */
+.review-form-button--full-width {
+  width: 100%;
+  justify-content: center;
 }
 
 .review-form-button:focus {

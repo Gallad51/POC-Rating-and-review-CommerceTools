@@ -168,12 +168,109 @@
                     product-id="test-product-1"
                     auto-fetch="true"
                 ></rating-compact>
+                
+                <h3 style="margin-top: 2rem;">Size Variants:</h3>
+                <div style="display: flex; gap: 2rem; align-items: center; margin: 1rem 0;">
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Small</p>
+                        <rating-compact 
+                            product-id="test-product-1"
+                            auto-fetch="true"
+                            size="small"
+                        ></rating-compact>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Medium (default)</p>
+                        <rating-compact 
+                            product-id="test-product-1"
+                            auto-fetch="true"
+                            size="medium"
+                        ></rating-compact>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Large</p>
+                        <rating-compact 
+                            product-id="test-product-1"
+                            auto-fetch="true"
+                            size="large"
+                        ></rating-compact>
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 2rem;">Theme Variants:</h3>
+                <div style="display: flex; gap: 2rem; align-items: center; margin: 1rem 0;">
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Light (default)</p>
+                        <rating-compact 
+                            product-id="test-product-1"
+                            auto-fetch="true"
+                            theme="light"
+                        ></rating-compact>
+                    </div>
+                    <div style="background: #333; padding: 1rem; border-radius: 4px;">
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #ccc;">Dark</p>
+                        <rating-compact 
+                            product-id="test-product-1"
+                            auto-fetch="true"
+                            theme="dark"
+                        ></rating-compact>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Primary</p>
+                        <rating-compact 
+                            product-id="test-product-1"
+                            auto-fetch="true"
+                            theme="primary"
+                        ></rating-compact>
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 2rem;">Display Variants:</h3>
+                <div style="display: flex; flex-direction: column; gap: 1rem; margin: 1rem 0;">
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Inline (default)</p>
+                        <rating-compact 
+                            product-id="test-product-1"
+                            auto-fetch="true"
+                            display="inline"
+                        ></rating-compact>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Block</p>
+                        <rating-compact 
+                            product-id="test-product-1"
+                            auto-fetch="true"
+                            display="block"
+                        ></rating-compact>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Minimal (stars only)</p>
+                        <rating-compact 
+                            product-id="test-product-1"
+                            auto-fetch="true"
+                            display="minimal"
+                        ></rating-compact>
+                    </div>
+                </div>
             </div>
 
-            <div class="code-example"><code>&lt;rating-compact 
+            <div class="code-example"><code>&lt;!-- Default --&gt;
+&lt;rating-compact 
     product-id="test-product-1"
     auto-fetch="true"
-&gt;&lt;/rating-compact&gt;</code></div>
+&gt;&lt;/rating-compact&gt;
+
+&lt;!-- Size variants --&gt;
+&lt;rating-compact size="small"&gt;&lt;/rating-compact&gt;
+&lt;rating-compact size="large"&gt;&lt;/rating-compact&gt;
+
+&lt;!-- Theme variants --&gt;
+&lt;rating-compact theme="dark"&gt;&lt;/rating-compact&gt;
+&lt;rating-compact theme="primary"&gt;&lt;/rating-compact&gt;
+
+&lt;!-- Display variants --&gt;
+&lt;rating-compact display="block"&gt;&lt;/rating-compact&gt;
+&lt;rating-compact display="minimal"&gt;&lt;/rating-compact&gt;</code></div>
         </div>
 
         <!-- Component 2: Reviews List -->
@@ -208,12 +305,106 @@
                     product-id="test-product-1"
                     button-text="Write a Review"
                 ></review-form-button>
+                
+                <h3 style="margin-top: 2rem;">Size Variants:</h3>
+                <div style="display: flex; gap: 1rem; align-items: center; margin: 1rem 0;">
+                    <review-form-button 
+                        product-id="test-product-1"
+                        button-text="Small"
+                        size="small"
+                    ></review-form-button>
+                    <review-form-button 
+                        product-id="test-product-1"
+                        button-text="Medium"
+                        size="medium"
+                    ></review-form-button>
+                    <review-form-button 
+                        product-id="test-product-1"
+                        button-text="Large"
+                        size="large"
+                    ></review-form-button>
+                </div>
+                
+                <h3 style="margin-top: 2rem;">Variant Styles:</h3>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin: 1rem 0;">
+                    <review-form-button 
+                        product-id="test-product-1"
+                        button-text="Primary"
+                        variant="primary"
+                    ></review-form-button>
+                    <review-form-button 
+                        product-id="test-product-1"
+                        button-text="Secondary"
+                        variant="secondary"
+                    ></review-form-button>
+                    <review-form-button 
+                        product-id="test-product-1"
+                        button-text="Outline"
+                        variant="outline"
+                    ></review-form-button>
+                    <review-form-button 
+                        product-id="test-product-1"
+                        button-text="Ghost"
+                        variant="ghost"
+                    ></review-form-button>
+                </div>
+                
+                <h3 style="margin-top: 2rem;">Position Variants:</h3>
+                <div style="margin: 1rem 0;">
+                    <div style="margin-bottom: 1rem;">
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Left aligned (default)</p>
+                        <review-form-button 
+                            product-id="test-product-1"
+                            button-text="Write Review"
+                            position="left"
+                        ></review-form-button>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Center aligned</p>
+                        <review-form-button 
+                            product-id="test-product-1"
+                            button-text="Write Review"
+                            position="center"
+                        ></review-form-button>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Right aligned</p>
+                        <review-form-button 
+                            product-id="test-product-1"
+                            button-text="Write Review"
+                            position="right"
+                        ></review-form-button>
+                    </div>
+                    <div>
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Full width</p>
+                        <review-form-button 
+                            product-id="test-product-1"
+                            button-text="Write Review"
+                            full-width="true"
+                        ></review-form-button>
+                    </div>
+                </div>
             </div>
 
-            <div class="code-example"><code>&lt;review-form-button 
+            <div class="code-example"><code>&lt;!-- Default --&gt;
+&lt;review-form-button 
     product-id="test-product-1"
     button-text="Write a Review"
-&gt;&lt;/review-form-button&gt;</code></div>
+&gt;&lt;/review-form-button&gt;
+
+&lt;!-- Size variants --&gt;
+&lt;review-form-button size="small"&gt;&lt;/review-form-button&gt;
+&lt;review-form-button size="large"&gt;&lt;/review-form-button&gt;
+
+&lt;!-- Variant styles --&gt;
+&lt;review-form-button variant="secondary"&gt;&lt;/review-form-button&gt;
+&lt;review-form-button variant="outline"&gt;&lt;/review-form-button&gt;
+&lt;review-form-button variant="ghost"&gt;&lt;/review-form-button&gt;
+
+&lt;!-- Position variants --&gt;
+&lt;review-form-button position="center"&gt;&lt;/review-form-button&gt;
+&lt;review-form-button position="right"&gt;&lt;/review-form-button&gt;
+&lt;review-form-button full-width="true"&gt;&lt;/review-form-button&gt;</code></div>
         </div>
 
         <!-- Integration Instructions -->

@@ -1,7 +1,14 @@
 <template>
   <div 
     class="rating-compact"
-    :class="{ 'rating-compact--loading': isLoading }"
+    :class="[
+      `rating-compact--${props.size}`,
+      `rating-compact--${props.theme}`,
+      `rating-compact--${props.display}`,
+      `rating-compact--star-${props.starStyle}`,
+      { 'rating-compact--loading': isLoading },
+      { 'rating-compact--compact': props.compact }
+    ]"
     role="group"
     :aria-label="`Product rating: ${displayRating} out of 5 stars, ${totalReviews} reviews`"
   >
@@ -51,9 +58,9 @@
       </div>
 
       <!-- Rating number and review count -->
-      <div class="rating-compact__info">
-        <span class="rating-compact__rating" aria-hidden="true">{{ displayRating }}</span>
-        <span class="rating-compact__count">({{ formattedReviewCount }})</span>
+      <div class="rating-compact__info" v-if="props.display !== 'minimal'">
+        <span v-if="props.showRating" class="rating-compact__rating" aria-hidden="true">{{ displayRating }}</span>
+        <span v-if="props.showCount" class="rating-compact__count">({{ formattedReviewCount }})</span>
       </div>
     </div>
   </div>
@@ -76,12 +83,30 @@ interface Props {
   compact?: boolean;
   /** Whether to fetch data automatically on mount */
   autoFetch?: boolean;
+  /** Size variant: small, medium, large */
+  size?: 'small' | 'medium' | 'large';
+  /** Theme variant: light, dark, primary, secondary */
+  theme?: 'light' | 'dark' | 'primary' | 'secondary';
+  /** Display style: inline, block, minimal */
+  display?: 'inline' | 'block' | 'minimal';
+  /** Show/hide rating number */
+  showRating?: boolean;
+  /** Show/hide review count */
+  showCount?: boolean;
+  /** Star style: filled, outlined */
+  starStyle?: 'filled' | 'outlined';
 }
 
 const props = withDefaults(defineProps<Props>(), {
   emptyText: 'No reviews yet',
   compact: false,
   autoFetch: true,
+  size: 'medium',
+  theme: 'light',
+  display: 'inline',
+  showRating: true,
+  showCount: true,
+  starStyle: 'filled',
 });
 
 const emit = defineEmits<{
@@ -156,6 +181,98 @@ defineExpose({
   align-items: center;
   gap: 0.5rem;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Size variants */
+.rating-compact--small {
+  font-size: 0.875rem;
+}
+
+.rating-compact--small .rating-compact__star {
+  font-size: 0.875rem;
+}
+
+.rating-compact--medium {
+  font-size: 1rem;
+}
+
+.rating-compact--medium .rating-compact__star {
+  font-size: 1rem;
+}
+
+.rating-compact--large {
+  font-size: 1.25rem;
+}
+
+.rating-compact--large .rating-compact__star {
+  font-size: 1.5rem;
+}
+
+/* Theme variants */
+.rating-compact--light {
+  color: var(--rating-text-color, #333);
+}
+
+.rating-compact--dark {
+  color: var(--rating-text-color-dark, #fff);
+}
+
+.rating-compact--dark .rating-compact__star--full {
+  color: var(--rating-star-color-dark, #ffd700);
+}
+
+.rating-compact--dark .rating-compact__star--empty {
+  color: var(--rating-star-empty-color-dark, #666);
+}
+
+.rating-compact--primary {
+  color: var(--rating-primary-color, #007bff);
+}
+
+.rating-compact--primary .rating-compact__star--full {
+  color: var(--rating-primary-color, #007bff);
+}
+
+.rating-compact--secondary {
+  color: var(--rating-secondary-color, #6c757d);
+}
+
+.rating-compact--secondary .rating-compact__star--full {
+  color: var(--rating-secondary-color, #6c757d);
+}
+
+/* Display variants */
+.rating-compact--inline {
+  display: inline-flex;
+}
+
+.rating-compact--block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.rating-compact--block .rating-compact__info {
+  margin-left: 0;
+}
+
+.rating-compact--minimal .rating-compact__info {
+  display: none;
+}
+
+/* Star style variants */
+.rating-compact--star-outlined .rating-compact__star--full {
+  text-shadow: 0 0 0 var(--rating-star-color, #ffc107);
+}
+
+/* Compact mode */
+.rating-compact--compact {
+  gap: 0.25rem;
+}
+
+.rating-compact--compact .rating-compact__info {
+  font-size: 0.75em;
 }
 
 .rating-compact__content {
