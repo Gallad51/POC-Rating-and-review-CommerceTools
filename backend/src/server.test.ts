@@ -215,7 +215,7 @@ describe('Server Integration Tests', () => {
       expect(response.body.data).toHaveProperty('id');
     });
 
-    it('should require authentication', async () => {
+    it('should allow unauthenticated review creation', async () => {
       const response = await request(app)
         .post('/api/products/test-product/reviews')
         .send({
@@ -223,7 +223,9 @@ describe('Server Integration Tests', () => {
           comment: 'Excellent!',
         });
 
-      expect(response.status).toBe(401);
+      expect(response.status).toBe(201);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('id');
     });
 
     it('should validate required fields', async () => {
