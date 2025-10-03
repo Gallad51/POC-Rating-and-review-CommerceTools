@@ -52,7 +52,14 @@
           }"
           aria-hidden="true"
         >
-          {{ getStarIcon(getStarState(star)) }}
+          <template v-if="getStarState(star) === 'half'">
+            <!-- Half star: show filled star clipped at 50% with empty star behind -->
+            <span class="rating-compact__star-base">{{ props.starEmptyIcon }}</span>
+            <span class="rating-compact__star-overlay">{{ props.starIcon }}</span>
+          </template>
+          <template v-else>
+            {{ getStarIcon(getStarState(star)) }}
+          </template>
         </span>
       </div>
 
@@ -373,6 +380,8 @@ defineExpose({
 .rating-compact__star {
   color: var(--star-color-filled, #ffc107);
   font-size: 1rem;
+  position: relative;
+  display: inline-block;
 }
 
 .rating-compact__star--full {
@@ -382,14 +391,19 @@ defineExpose({
 .rating-compact__star--half {
   color: var(--star-color-half, #ffc107);
   position: relative;
-  overflow: hidden;
 }
 
-.rating-compact__star--half::after {
-  content: '☆';
-  position: absolute;
-  left: 50%;
+.rating-compact__star-base {
   color: var(--star-color-empty, #e0e0e0);
+}
+
+.rating-compact__star-overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 50%;
+  overflow: hidden;
+  color: var(--star-color-half, #ffc107);
 }
 
 .rating-compact__star--empty {
