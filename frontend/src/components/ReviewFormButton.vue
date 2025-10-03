@@ -3,7 +3,27 @@
     class="review-form-modal"
     :class="`review-form-modal--${props.position}`"
   >
+    <!-- noteFirst behavior: clickable stars -->
+    <div v-if="props.behavior === 'noteFirst'" class="review-form-stars-trigger">
+      <button
+        v-for="star in 5"
+        :key="star"
+        type="button"
+        class="review-form-star-btn"
+        :class="{ 'review-form-star-btn--active': star <= hoverRating || star <= selectedRating }"
+        :aria-label="`Rate ${star} out of 5 stars and write a review`"
+        @click="openModalWithRating(star)"
+        @mouseenter="hoverRating = star"
+        @mouseleave="hoverRating = 0"
+      >
+        ★
+      </button>
+      <span class="review-form-stars-text">Click to rate and review</span>
+    </div>
+
+    <!-- button behavior: standard button -->
     <button
+      v-else
       class="review-form-button"
       :class="[
         `review-form-button--${props.size}`,
@@ -187,6 +207,8 @@ interface Props {
   fullWidth?: boolean;
   /** Show icon */
   showIcon?: boolean;
+  /** Behavior: button (default) or noteFirst (click stars to pre-select rating) */
+  behavior?: 'button' | 'noteFirst';
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -199,6 +221,7 @@ const props = withDefaults(defineProps<Props>(), {
   position: 'left',
   fullWidth: false,
   showIcon: true,
+  behavior: 'button',
 });
 
 const emit = defineEmits<{
@@ -221,6 +244,7 @@ const modalTitleId = `modal-title-${uid}`;
 const isOpen = ref(false);
 const isSubmitting = ref(false);
 const hoverRating = ref(0);
+const selectedRating = ref(0);
 
 interface FormData {
   rating: number;
@@ -259,11 +283,17 @@ const openModal = () => {
   isOpen.value = true;
   emit('opened');
   
-  // Focus trap: focus the first focusable element
+  // Focus the first form field after modal opens
   setTimeout(() => {
-    const firstInput = document.querySelector('.review-form__star-btn') as HTMLElement;
+    const firstInput = document.querySelector('.review-form input, .review-form textarea') as HTMLElement;
     firstInput?.focus();
   }, 100);
+};
+
+const openModalWithRating = (rating: number) => {
+  selectedRating.value = rating;
+  formData.rating = rating;
+  openModal();
 };
 
 const closeModal = () => {
@@ -503,6 +533,39 @@ defineExpose({
 .review-form-button:focus {
   outline: 2px solid #007bff;
   outline-offset: 2px;
+}
+
+/* Star trigger styles (noteFirst behavior) */
+.review-form-stars-trigger {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.review-form-star-btn {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #e0e0e0;
+  cursor: pointer;
+  padding: 0.25rem;
+  transition: all 0.2s;
+  display: inline-block;
+}
+
+.review-form-star-btn:hover {
+  transform: scale(1.1);
+}
+
+.review-form-star-btn--active {
+  color: #ffc107;
+}
+
+.review-form-stars-text {
+  font-size: 0.875rem;
+  color: #666;
+  margin-top: 0.25rem;
 }
 
 .review-modal {

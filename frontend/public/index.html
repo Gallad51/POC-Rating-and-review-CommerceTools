@@ -497,40 +497,24 @@
                     ></review-form-button>
                 </div>
                 
-                <h3 style="margin-top: 2rem;">Position Variants:</h3>
+                <h3 style="margin-top: 2rem;">Behavior Variants:</h3>
                 <div style="margin: 1rem 0;">
-                    <div style="margin-bottom: 1rem;">
-                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Left aligned (default)</p>
+                    <div style="margin-bottom: 1.5rem;">
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;"><strong>Button (default):</strong> Click button to open review form</p>
                         <review-form-button 
                             product-id="test-product-1"
                             button-text="Write Review"
-                            position="left"
+                            behavior="button"
                         ></review-form-button>
                     </div>
-                    <div style="margin-bottom: 1rem;">
-                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Center aligned</p>
+                    <div style="margin-bottom: 1.5rem;">
+                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;"><strong>Note First:</strong> Click stars to select rating and open review form with rating pre-filled</p>
                         <review-form-button 
                             product-id="test-product-1"
-                            button-text="Write Review"
-                            position="center"
+                            behavior="noteFirst"
                         ></review-form-button>
                     </div>
-                    <div style="margin-bottom: 1rem;">
-                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Right aligned</p>
-                        <review-form-button 
-                            product-id="test-product-1"
-                            button-text="Write Review"
-                            position="right"
-                        ></review-form-button>
-                    </div>
-                    <div>
-                        <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">Full width</p>
-                        <review-form-button 
-                            product-id="test-product-1"
-                            button-text="Write Review"
-                            full-width="true"
-                        ></review-form-button>
-                    </div>
+                </div>
                 </div>
             </div>
 
@@ -549,10 +533,9 @@
 &lt;review-form-button variant="outline"&gt;&lt;/review-form-button&gt;
 &lt;review-form-button variant="ghost"&gt;&lt;/review-form-button&gt;
 
-&lt;!-- Position variants --&gt;
-&lt;review-form-button position="center"&gt;&lt;/review-form-button&gt;
-&lt;review-form-button position="right"&gt;&lt;/review-form-button&gt;
-&lt;review-form-button full-width="true"&gt;&lt;/review-form-button&gt;</code></div>
+&lt;!-- Behavior variants --&gt;
+&lt;review-form-button behavior="button"&gt;&lt;/review-form-button&gt;
+&lt;review-form-button behavior="noteFirst"&gt;&lt;/review-form-button&gt;</code></div>
         </div>
 
         <!-- Integration Instructions -->
