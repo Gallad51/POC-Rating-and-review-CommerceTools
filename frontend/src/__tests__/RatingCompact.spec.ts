@@ -79,4 +79,89 @@ describe('RatingCompact', () => {
     expect(container.attributes('aria-label')).toContain('4.2 out of 5 stars');
     expect(container.attributes('aria-label')).toContain('42 reviews');
   });
+
+  // Variant tests
+  it('applies size variant classes correctly', () => {
+    const wrapper = mount(RatingCompact, {
+      props: {
+        averageRating: 4.0,
+        totalReviews: 10,
+        size: 'large',
+      },
+    });
+
+    expect(wrapper.find('.rating-compact').classes()).toContain('rating-compact--large');
+  });
+
+  it('applies theme variant classes correctly', () => {
+    const wrapper = mount(RatingCompact, {
+      props: {
+        averageRating: 4.0,
+        totalReviews: 10,
+        theme: 'dark',
+      },
+    });
+
+    expect(wrapper.find('.rating-compact').classes()).toContain('rating-compact--dark');
+  });
+
+  it('applies display variant classes correctly', () => {
+    const wrapper = mount(RatingCompact, {
+      props: {
+        averageRating: 4.0,
+        totalReviews: 10,
+        display: 'block',
+      },
+    });
+
+    expect(wrapper.find('.rating-compact').classes()).toContain('rating-compact--block');
+  });
+
+  it('hides rating number when showRating is false', () => {
+    const wrapper = mount(RatingCompact, {
+      props: {
+        averageRating: 4.5,
+        totalReviews: 42,
+        showRating: false,
+      },
+    });
+
+    expect(wrapper.find('.rating-compact__rating').exists()).toBe(false);
+  });
+
+  it('hides review count when showCount is false', () => {
+    const wrapper = mount(RatingCompact, {
+      props: {
+        averageRating: 4.5,
+        totalReviews: 42,
+        showCount: false,
+      },
+    });
+
+    expect(wrapper.find('.rating-compact__count').exists()).toBe(false);
+  });
+
+  it('hides info section in minimal display mode', () => {
+    const wrapper = mount(RatingCompact, {
+      props: {
+        averageRating: 4.5,
+        totalReviews: 42,
+        display: 'minimal',
+      },
+    });
+
+    expect(wrapper.find('.rating-compact__info').exists()).toBe(false);
+  });
+
+  it('applies compact mode class correctly', () => {
+    const wrapper = mount(RatingCompact, {
+      props: {
+        averageRating: 4.0,
+        totalReviews: 10,
+        compact: true,
+      },
+    });
+
+    expect(wrapper.find('.rating-compact').classes()).toContain('rating-compact--compact');
+  });
 });
