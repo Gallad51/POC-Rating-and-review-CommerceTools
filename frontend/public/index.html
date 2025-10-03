@@ -223,8 +223,8 @@
             <h3>Step 1: Include the JavaScript Bundle</h3>
             
             <p><strong>Option A: Via Cloud Run CDN (Hosted)</strong></p>
-            <div class="code-example"><code>&lt;script type="module" src="https://ratings-reviews-frontend-[YOUR-ENV].run.app/ratings-reviews-components.es.js"&gt;&lt;/script&gt;</code></div>
-            <p style="margin-top: 10px; color: #666; font-size: 0.9rem;">Replace <code>[YOUR-ENV]</code> with your deployment environment from the PR preview comment.</p>
+            <div class="code-example"><code id="cdn-script-example">&lt;script type="module" src="https://ratings-reviews-frontend-[YOUR-ENV].run.app/ratings-reviews-components.es.js"&gt;&lt;/script&gt;</code></div>
+            <p style="margin-top: 10px; color: #666; font-size: 0.9rem;">This example uses the current deployment URL. For other environments, replace the URL with your deployment environment from the PR preview comment.</p>
             
             <p style="margin-top: 20px;"><strong>Option B: Self-hosted</strong></p>
             <div class="code-example"><code>&lt;script type="module" src="path/to/ratings-reviews-components.es.js"&gt;&lt;/script&gt;</code></div>
@@ -244,6 +244,13 @@
     <script type="module">
         // Load the web components bundle
         import './ratings-reviews-components.es.js';
+
+        // Update the CDN script example with the current URL
+        const currentOrigin = window.location.origin;
+        const cdnScriptExample = document.getElementById('cdn-script-example');
+        if (cdnScriptExample) {
+            cdnScriptExample.textContent = `<script type="module" src="${currentOrigin}/ratings-reviews-components.es.js"><\/script>`;
+        }
 
         // Function to update all component product IDs
         window.updateProductId = function() {
