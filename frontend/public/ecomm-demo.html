@@ -186,6 +186,84 @@
         review-form-button {
             display: block;
         }
+
+        /* Product ID Picker Section */
+        .product-id-picker {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+        }
+
+        .picker-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .picker-form {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .picker-label {
+            font-weight: 500;
+            color: #666;
+        }
+
+        .picker-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 0.75rem 1rem;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+            color: #333;
+            background-color: #f9f9f9;
+        }
+
+        .picker-input:focus {
+            outline: none;
+            border-color: #999;
+            background-color: #fff;
+        }
+
+        .picker-button {
+            padding: 0.75rem 2rem;
+            background-color: #888;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .picker-button:hover {
+            background-color: #777;
+        }
+
+        .picker-info {
+            width: 100%;
+            margin-top: 0.5rem;
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .picker-input {
+                min-width: 100%;
+            }
+            
+            .picker-button {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -259,9 +337,43 @@
                 ></review-form-button>
             </div>
         </section>
+
+        <!-- Product ID Picker Section -->
+        <section class="product-id-picker">
+            <h3 class="picker-title">Change Product ID</h3>
+            <div class="picker-form">
+                <label for="product-id-input" class="picker-label">Product ID:</label>
+                <input 
+                    id="product-id-input" 
+                    type="text" 
+                    class="picker-input"
+                    placeholder="e.g., test-product-1 or UUID"
+                    value="test-product-1"
+                />
+                <button class="picker-button" onclick="updateProductId()">Update</button>
+            </div>
+            <p class="picker-info">
+                💡 Enter a product ID to load different reviews and ratings. Supports both key format (e.g., test-product-1) and UUID format.
+            </p>
+        </section>
     </div>
 
     <!-- Load the Web Components -->
     <script type="module" src="./ratings-reviews-components.es.js"></script>
+    
+    <script>
+        function updateProductId() {
+            const productId = document.getElementById('product-id-input').value;
+            if (!productId || productId.trim() === '') {
+                alert('Please enter a valid product ID');
+                return;
+            }
+            
+            // Update all components with the new product ID
+            document.getElementById('product-rating').setAttribute('product-id', productId);
+            document.getElementById('reviews-list').setAttribute('product-id', productId);
+            document.getElementById('review-form').setAttribute('product-id', productId);
+        }
+    </script>
 </body>
 </html>
