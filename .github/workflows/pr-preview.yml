@@ -44,7 +44,7 @@ jobs:
     - name: Generate PR environment name
       id: env
       run: |
-        PR_NUMBER=${{ github.event.number }}
+        PR_NUMBER=${{ github.event.pull_request.number }}
         BRANCH_NAME=$(echo "${{ github.head_ref }}" | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]' | sed 's/^-\+\|-\+$//g' | cut -c1-20)
         ENV_NAME="pr-${PR_NUMBER}-${BRANCH_NAME}"
         # Use short commit SHA to ensure unique image tags that trigger redeployment
