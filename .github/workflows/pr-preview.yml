@@ -44,21 +44,32 @@ jobs:
     - name: Generate PR environment name
       id: env
       run: |
-        PR_NUMBER=${{ github.event.number }}
+        PR_NUMBER=${{ github.event.pull_request.number }}
         BRANCH_NAME=$(echo "${{ github.head_ref }}" | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]' | sed 's/^-\+\|-\+$//g' | cut -c1-20)
         ENV_NAME="pr-${PR_NUMBER}-${BRANCH_NAME}"
         # Use short commit SHA to ensure unique image tags that trigger redeployment
         SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-8)
         IMAGE_TAG="${ENV_NAME}-${SHORT_SHA}"
         # Ensure service names comply with Cloud Run naming requirements (lowercase, alphanumeric and hyphens, max 63 chars)
-        BACKEND_SERVICE=$(echo "${SERVICE_NAME}-backend-${ENV_NAME}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g' | cut -c1-63)
-        FRONTEND_SERVICE=$(echo "${SERVICE_NAME}-frontend-${ENV_NAME}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g' | cut -c1-63)
+        # Must start with letter, not end with hyphen, max 63 chars total
+        # Format: ratings-reviews-backend-pr-XX-branch (ensure total < 63 chars)
+        # Calculate max branch name length: 63 - length("ratings-reviews-backend-pr-") - length(PR_NUMBER) - 1 (for hyphen)
+        PR_NUMBER_LEN=${#PR_NUMBER}
+        MAX_BRANCH_LEN=$((63 - 28 - PR_NUMBER_LEN - 1))
+        if [ $MAX_BRANCH_LEN -lt 1 ]; then MAX_BRANCH_LEN=1; fi
+        SAFE_BRANCH=$(echo "${BRANCH_NAME}" | cut -c1-${MAX_BRANCH_LEN} | sed 's/-*$//')
+        SAFE_ENV="pr-${PR_NUMBER}-${SAFE_BRANCH}"
+        BACKEND_SERVICE="ratings-reviews-backend-${SAFE_ENV}"
+        FRONTEND_SERVICE="ratings-reviews-frontend-${SAFE_ENV}"
         echo "Environment name: ${ENV_NAME}"
+        echo "Safe environment: ${SAFE_ENV}"
         echo "Image tag: ${IMAGE_TAG}"
         echo "Commit SHA: ${SHORT_SHA}"
         echo "Backend service: ${BACKEND_SERVICE}"
         echo "Frontend service: ${FRONTEND_SERVICE}"
-        echo "env_name=${ENV_NAME}" >> $GITHUB_OUTPUT
+        echo "Backend service length: ${#BACKEND_SERVICE}"
+        echo "Frontend service length: ${#FRONTEND_SERVICE}"
+        echo "env_name=${SAFE_ENV}" >> $GITHUB_OUTPUT
         echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
         echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
         echo "backend_service=${BACKEND_SERVICE}" >> $GITHUB_OUTPUT

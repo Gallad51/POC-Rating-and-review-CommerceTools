@@ -22,7 +22,7 @@
     "build": "npm run build:components && npm run build:demo",
     "build:lib": "vite build",
     "build:components": "vite build --config vite.config.webcomponents.ts",
-    "build:demo": "cp public/index.html dist/index.html",
+    "build:demo": "cp public/index.html dist/index.html && cp public/ecomm-demo.html dist/ecomm-demo.html",
     "build:static": "echo 'Building static assets...' && mkdir -p dist && cp -r public/* dist/",
     "preview": "vite preview",
     "start": "node server.js",
