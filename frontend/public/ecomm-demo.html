@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Detail - E-commerce Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Header Navigation */
+        .header {
+            background-color: #e0e0e0;
+            padding: 1rem 0;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-item {
+            color: #666;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Product Section */
+        .product-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* Product Gallery */
+        .product-gallery {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .main-image {
+            width: 100%;
+            aspect-ratio: 1;
+            background-color: #999;
+            border-radius: 4px;
+        }
+
+        .thumbnail-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+        }
+
+        .thumbnail {
+            aspect-ratio: 1;
+            background-color: #bbb;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        /* Product Info */
+        .product-info {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .product-name {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-price {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #666;
+            margin-bottom: 1rem;
+        }
+
+        .product-rating-section {
+            padding: 1rem 0;
+            border-top: 1px solid #e0e0e0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .product-description {
+            color: #666;
+            line-height: 1.8;
+            font-size: 0.95rem;
+        }
+
+        .add-to-cart-btn {
+            padding: 1rem 2rem;
+            background-color: #999;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 1rem;
+        }
+
+        .add-to-cart-btn:hover {
+            background-color: #888;
+        }
+
+        /* Reviews Section */
+        .reviews-section {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .reviews-header {
+            margin-bottom: 2rem;
+        }
+
+        .reviews-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        /* Review Form Section */
+        .review-form-section {
+            padding: 1.5rem 0;
+            border-top: 1px solid #e0e0e0;
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .product-section {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .nav-container {
+                flex-wrap: wrap;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+        }
+
+        /* Highlight for Web Components */
+        rating-compact,
+        reviews-list,
+        review-form-button {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Navigation -->
+    <header class="header">
+        <nav class="nav-container">
+            <div class="nav-item">Example</div>
+            <div class="nav-item">Example</div>
+            <div class="nav-item">Example</div>
+            <div class="nav-item">Example</div>
+            <div class="nav-item">Example</div>
+        </nav>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Product Section -->
+        <section class="product-section">
+            <!-- Product Gallery -->
+            <div class="product-gallery">
+                <div class="main-image"></div>
+                <div class="thumbnail-container">
+                    <div class="thumbnail"></div>
+                    <div class="thumbnail"></div>
+                    <div class="thumbnail"></div>
+                    <div class="thumbnail"></div>
+                </div>
+            </div>
+
+            <!-- Product Info -->
+            <div class="product-info">
+                <h1 class="product-name">Product Name with some details</h1>
+                <div class="product-price">55.00 €</div>
+                
+                <!-- Web Component: Rating Display (in color!) -->
+                <div class="product-rating-section">
+                    <rating-compact 
+                        id="product-rating"
+                        product-id="test-product-1"
+                        auto-fetch="true"
+                    ></rating-compact>
+                </div>
+
+                <div class="product-description">
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut ut arcu a turpis faucibus feugiat ut vel magna. Aenean nec convallis mi. Sed scelerisque tempor neque, venenatis pretium nisl aliquet a. Cras sit amet sapien urna. Maecenas placerat gravida fermentum. Duis id tincidunt dui, in semper mi. Suspendisse volutpat mauris sem, quis euismod ligula ultricies mattis. Donec dictum sem ut urna laoreet, tempor aliquet purus iaculis. In in tempor ligula.</p>
+                </div>
+
+                <button class="add-to-cart-btn">Add to cart</button>
+            </div>
+        </section>
+
+        <!-- Reviews Section -->
+        <section class="reviews-section">
+            <div class="reviews-header">
+                <h2 class="reviews-title">Customer Reviews</h2>
+            </div>
+
+            <!-- Web Component: Reviews List (in color!) -->
+            <reviews-list 
+                id="reviews-list"
+                product-id="test-product-1"
+                page-size="10"
+            ></reviews-list>
+
+            <!-- Web Component: Review Form Button (in color!) -->
+            <div class="review-form-section">
+                <review-form-button 
+                    id="review-form"
+                    product-id="test-product-1"
+                    button-text="Write Your Review"
+                ></review-form-button>
+            </div>
+        </section>
+    </div>
+
+    <!-- Load the Web Components -->
+    <script type="module" src="./ratings-reviews-components.es.js"></script>
+</body>
+</html>

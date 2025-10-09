@@ -185,7 +185,9 @@ npm run build
 npm start
 ```
 
-Then visit `http://localhost:8080` to see the Web Components demo.
+Then visit:
+- `http://localhost:8080` - Interactive Web Components demo with configuration
+- `http://localhost:8080/ecomm-demo.html` - E-commerce product detail page demo (grayscale design highlighting the colorful components)
 
 ## 🔌 Integration Examples
 
